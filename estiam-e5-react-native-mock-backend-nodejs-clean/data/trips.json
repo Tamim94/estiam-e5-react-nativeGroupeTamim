@@ -130,5 +130,21 @@
       "lat": 0,
       "lng": 0
     }
+  },
+  {
+    "id": "d6669d92-eccf-4632-97d0-d296859885c2",
+    "title": "sggrgtr",
+    "destination": "Paris, France",
+    "startDate": "16/09/2025",
+    "endDate": "16/09/2026",
+    "image": "http://10.0.2.2:4000/uploads/1766081533485-3d6b848f-e5c8-4ceb-a3d1-1dd69f7496ce.jpeg",
+    "description": "ertetwerewrer",
+    "photos": [
+      "http://10.0.2.2:4000/uploads/1766081533485-3d6b848f-e5c8-4ceb-a3d1-1dd69f7496ce.jpeg"
+    ],
+    "location": {
+      "lat": 0,
+      "lng": 0
+    }
   }
 ]

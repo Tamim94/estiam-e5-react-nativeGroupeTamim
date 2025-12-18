@@ -36,7 +36,35 @@ export default function AddTripModal() {
     const [uploadedPhotos, setuploadedPhotos] = useState<Array<string>>([]);
     const [coverImage, setcoverImage] = useState<string>("");
 
-    
+
+const DESTINATION_REGEX = /^[A-Za-zÀ-ÿ\s]+,\s[A-Za-zÀ-ÿ\s]+$/;
+// regex pour trips au format "Ville, Pays"
+const validateForm = () => {
+  if (!tripTitle.trim()) {
+    Alert.alert('Erreur', 'Le titre est obligatoire');
+    return false;
+  }
+
+  if (!DESTINATION_REGEX.test(destination)) {
+    Alert.alert(
+      'Erreur',
+      'La destination doit être au format "Ville, Pays"'
+    );
+    return false;
+  }
+
+  if (!startDate || !endDate) {
+    Alert.alert('Erreur', 'Les dates sont obligatoires');
+    return false;
+  }
+
+  if (new Date(endDate) < new Date(startDate)) {
+    Alert.alert('Erreur', 'La date de retour doit être après la date de départ');
+    return false;
+  }
+
+  return true;
+};
 
     const openAppSettings = () => {
         Linking.openSettings();
@@ -155,76 +183,67 @@ export default function AddTripModal() {
 
 
     };
-    
 
-    const uploadImages = async (uploadedPhotos : string[], coverImage:  string) => {
-                    if (selectedImages.length > 0) {
+const uploadImages = async () => {
+  const uploaded: string[] = [];
+  let cover = '';
 
-                const totalImages = selectedImages.length;
+  for (let i = 0; i < selectedImages.length; i++) {
+    const uri = selectedImages[i];
+    const url = await API.uploadImage(uri);
+    uploaded.push(url);
 
-                for (let i = 0; i < selectedImages.length; i++) {
-                    const imageUri = selectedImages[i];
-                    const uploadedUrl = await API.uploadImage(imageUri);
-                    uploadedPhotos.push(uploadedUrl);
-
-                    if (i == 0) {
-                        coverImage = uploadedUrl;
-                    }
-
-                    const progress = Math.round(((i + 1) / totalImages) * 100);
-                    setUploadProgress(progress);
-                }
-
-                setuploadedPhotos(uploadedPhotos);
-                setcoverImage(coverImage);
-            }
-
+    if (i === 0) {
+      cover = url;
     }
 
-    const handleSaveTrip = async () => {
+    setUploadProgress(Math.round(((i + 1) / selectedImages.length) * 100));
+  }
+
+  return { uploaded, cover };
+};
 
 
-        try {
+const handleSaveTrip = async () => {
+  if (!validateForm()) return;
 
-            setIsUploading(true);
-            setUploadProgress(0);
+  try {
+    setIsUploading(true);
+    setUploadProgress(0);
 
-           uploadImages(uploadedPhotos, coverImage);
+    console.log('🚀 Starting trip creation...');
+    console.log('📸 Images to upload:', selectedImages);
 
-            let trip = {
-                title: tripTitle,
-                destination,
-                startDate,
-                endDate,
-                description,
-                image: coverImage,
-                photos: selectedImages
-            };
+    const { uploaded, cover } = await uploadImages();
 
+    console.log('✅ Images uploaded successfully:', uploaded);
 
-            const newTrip = await API.createTrip(trip);
-
-            console.log('Voyage créé', newTrip);
-
-            setIsUploading(false);
-
-            setTimeout(() => {
-                Alert.alert(
-                    'Succès',
-                    'Votre voyage a été créé !',
-                    [
-                        { text: 'OK', onPress: () => router.back }
-                    ]
-                )
-            }, 500);
-
-        } catch (error) {
-            console.log('Erreur:', error);
-            setIsUploading(false);
-            Alert.alert('Erreur', 'Impossible de créer le voyage');
-
-        }
+    const trip = {
+      title: tripTitle,
+      destination,
+      startDate,
+      endDate,
+      description,
+      image: cover,
+      photos: uploaded,
     };
+
+    console.log('💾 Creating trip:', trip);
+    await API.createTrip(trip);
+
+    console.log('✅ Trip created successfully');
+    Alert.alert('Succès', 'Voyage créé avec succès', [
+      { text: 'OK', onPress: () => router.back() },
+    ]);
+
+  } catch (error: any) {
+    console.error('❌ Error creating trip:', error);
+    Alert.alert('Erreur', `Impossible de créer le voyage: ${error.message || error}`);
+  } finally {
+    setIsUploading(false);
+  }
+};
+
 
     return (
         <SafeAreaView style={styles.container} edges={['bottom']}>
@@ -280,6 +299,22 @@ export default function AddTripModal() {
                         💡 Utilisez la géolocalisation pour marquer le lieu
                     </Text>
                 </View>
+
+                {/* Dates debut */}
+<View style={styles.dateColumn}>
+                    <Text style={styles.label}>Date de départ</Text>
+                    <View style={styles.inputWithIcon}>
+                        <Ionicons name="calendar-outline" size={24} color="#6b7280" />
+                        <TextInput
+                            style={styles.inputFlex}
+                            placeholder="JJ/MM/AAAA"
+                            value={startDate}
+                            onChangeText={setStartDate}
+                            placeholderTextColor="#9ca3af"
+                        />
+                    </View>
+                </View>
+
                 {/* Dates */}
                 <View style={styles.section}>
                     <View style={styles.dateRow}>
@@ -313,6 +348,27 @@ export default function AddTripModal() {
                         placeholderTextColor="#9ca3af"
                     />
                 </View>
+
+                {/* Photos Preview */}
+{selectedImages.length > 0 && (
+                    <View style={styles.section}>
+                        <Text style={styles.label}>Images sélectionnées ({selectedImages.length})</Text>
+                        <ScrollView horizontal showsHorizontalScrollIndicator={false}>
+                            {selectedImages.map((uri, index) => (
+                                <View key={index} style={styles.imagePreview}>
+                                    <Image source={{ uri }} style={styles.previewImage} />
+                                    <TouchableOpacity
+                                        style={styles.removeButton}
+                                        onPress={() => setSelectedImages(prev => prev.filter((_, i) => i !== index))}
+                                    >
+                                        <Ionicons name="close-circle" size={24} color="#ef4444" />
+                                    </TouchableOpacity>
+                                </View>
+                            ))}
+                        </ScrollView>
+                    </View>
+                )}
+
 
                 {/* Upload Progress */}
 
@@ -511,5 +567,23 @@ const styles = StyleSheet.create({
         color: 'white',
         fontSize: 16,
         fontWeight: '600',
-    }
+    },
+imagePreview: {
+    marginRight: 12,
+    position: 'relative',
+},
+previewImage: {
+    width: 100,
+    height: 100,
+    borderRadius: 12,
+},
+removeButton: {
+    position: 'absolute',
+    top: -8,
+    right: -8,
+    backgroundColor: 'white',
+    borderRadius: 12,
+},
+
+
 });

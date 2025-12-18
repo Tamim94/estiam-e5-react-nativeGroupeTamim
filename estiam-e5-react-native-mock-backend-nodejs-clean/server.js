@@ -21,6 +21,14 @@ const DB_PATH = path.join(__dirname, "data", "trips.json");
 
 if (!fs.existsSync(UPLOADS_DIR)) fs.mkdirSync(UPLOADS_DIR, { recursive: true });
 
+// Helper function to get the correct public URL based on request
+function getPublicUrl(req) {
+  const host = req.get('host');
+  const forwardedHost = req.get('x-forwarded-host');
+  const protocol = req.protocol;
+  return `${protocol}://${forwardedHost || host}`;
+}
+
 function loadTrips() {
   try {
     const raw = fs.readFileSync(DB_PATH, "utf8");
@@ -217,9 +225,12 @@ app.post("/trips/:id/photos", authenticateToken, (req, res) => {
 
 app.post("/uploads", upload.single("file"), (req, res) => {
   if (!req.file) return res.status(400).json({ error: "No file uploaded" });
-  const fileUrl = `${req.protocol}://${req.get("host")}/uploads/${req.file.filename}`;
+  const baseUrl = getPublicUrl(req);
+  const fileUrl = `${baseUrl}/uploads/${req.file.filename}`;
+  console.log(`📸 File uploaded: ${fileUrl}`);
   return res.status(201).json({ url: fileUrl });
 });
+
 
 app.use((req, res) => res.status(404).json({ error: "Not found" }));
 

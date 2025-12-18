@@ -1,5 +1,5 @@
 import { Platform, StyleSheet, View, Text, TextInput, TouchableOpacity, ScrollView, Image } from 'react-native';
-
+import { useFocusEffect } from '@react-navigation/native';
 import { Collapsible } from '@/components/ui/collapsible';
 import { ExternalLink } from '@/components/external-link';
 import ParallaxScrollView from '@/components/parallax-scroll-view';
@@ -10,47 +10,42 @@ import { Fonts } from '@/constants/theme';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import Ionicons from '@expo/vector-icons/Ionicons';
 import { HeaderTitle } from '@react-navigation/elements';
-import { useState } from 'react';
+import {useCallback, useState} from 'react';
 import { IMAGES_SOURCES } from './index';
 import { useRouter } from 'expo-router';
+import {API} from "@/services/api";
+
 
 export default function TabTwoScreen() {
 
   const router = useRouter();
   const [selectedTab, setSelectedTab] = useState<string>('All');
 
-  const TRIPS_DATA = [
-    {
-      id: '1',
-      title: 'Trip to Bali',
-      destination : 'Bali, Indonesia',
-      startDate : '2024-08-10',
-      endDate : '2024-08-20',
-      image : 'bali',
-      photosCount: 3
-    },
-    {
-      id: '2',
-      title: 'Trip to Tokyo',
-      destination : 'Tokyo, Japan',
-      startDate : '2024-09-15',
-      endDate : '2024-09-25',
-      image : 'tokyo',
-      photosCount: 5
-    },
-      {
-      id: '3',
-      title: 'Trip to Paris',
-      destination : 'Paris, France',
-      startDate : '2024-10-05',
-      endDate : '2024-10-15',
-      image : 'paris',
-      photosCount: 8
-      }
-  ];
+const [trips, setTrips] = useState<any[]>([]);
+const [loading, setLoading] = useState(true);
 
   const tabs = ['All', 'Upcoming', 'Past', 'Favorites'];
 
+useFocusEffect(
+  useCallback(() => {
+    let mounted = true;
+
+    const loadTrips = async () => {
+      try {
+        setLoading(true);
+        const data = await API.getTrips(); // GET /trips
+        if (mounted) setTrips(data);
+      } catch (e) {
+        console.error("Failed to load trips", e);
+      } finally {
+        if (mounted) setLoading(false);
+      }
+    };
+
+    loadTrips();
+    return () => { mounted = false };
+  }, [])
+);
 
   return (
     <SafeAreaView style={styles.container} edges={['top']}>
@@ -99,16 +94,23 @@ export default function TabTwoScreen() {
 
         {/* Trips List */}
         <View style={styles.tripsList}>
-          {TRIPS_DATA.map((trip) => (
+         {trips.map((trip) => (
             <TouchableOpacity
               key={trip.id}
               style={styles.tripCard}>
             {/* Image */}
-            <View style={styles.tripImageContainer}>
-              <Image source={IMAGES_SOURCES[trip.image as keyof typeof IMAGES_SOURCES] || trip.image}
-               style={styles.tripImage}
-               resizeMode="cover"
-               />
+<View style={styles.tripImageContainer}>
+  <Image
+    source={
+      // 1. checksi ya image
+      IMAGES_SOURCES[trip.image as keyof typeof IMAGES_SOURCES]
+      // pas d image alors background couleur jaune
+      ? IMAGES_SOURCES[trip.image as keyof typeof IMAGES_SOURCES]
+      : (trip.image ? { uri: trip.image } : undefined)
+    }
+    style={styles.tripImage}
+    resizeMode="cover"
+  />
               <View style={styles.tripImageOverlay} />
               <View style={styles.tripImageContent}>
                 <Text style={styles.tripCardTitle}>{trip.title}</Text>
