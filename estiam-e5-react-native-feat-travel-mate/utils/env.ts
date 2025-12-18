@@ -10,13 +10,20 @@
  * Recommandation Expo: https://docs.expo.dev/guides/environment-variables/
  */
 import { Platform } from 'react-native';
+import Constants from 'expo-constants';
 
-const defaultBackend =
-  Platform.OS === 'android'
-    ? 'http://10.0.2.2:4000'
-    : Platform.OS === 'ios'
-    ? 'http://localhost:4000'
-    : 'http://localhost:4000';
+const getDefaultBackend = () => {
+  // For Android Emulator ( i use android studio btw)
+  if (Platform.OS === 'android' && Constants.isDevice === false) {
+    return 'http://10.0.2.2:4000';
+  }
+
+  //Pour expo go sur device physique
+  // Replace with your actual local network IP (run `ipconfig` on Windows or `ifconfig` on Mac/Linux)!!!!!!
+  return 'http://192.168.1.20:4000';
+};
+
+const defaultBackend = getDefaultBackend();
 
 
 export const config = {  //modif du fallback
