@@ -7,6 +7,8 @@ import {
   ScrollView,
   Image,
   Modal,
+  RefreshControl,
+  Alert,
 } from "react-native";
 import { useFocusEffect } from "@react-navigation/native";
 import { SafeAreaView } from "react-native-safe-area-context";
@@ -25,6 +27,7 @@ export default function TripsScreen() {
 
   const [trips, setTrips] = useState<Trip[]>([]);
   const [loading, setLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
   const [selectedTab, setSelectedTab] = useState<
     "All" | "Upcoming" | "Past" | "Favorites"
   >("All");
@@ -39,22 +42,30 @@ export default function TripsScreen() {
     "Favorites",
   ];
 
-  // Tab labels mapping for translations
   const getTabLabel = (tab: "All" | "Upcoming" | "Past" | "Favorites") => {
     const labels = {
-      All: t('trips.all'),
-      Upcoming: t('trips.upcoming'),
-      Past: t('trips.past'),
-      Favorites: t('trips.favorites'),
+      All: t("trips.all"),
+      Upcoming: t("trips.upcoming"),
+      Past: t("trips.past"),
+      Favorites: t("trips.favorites"),
     };
     return labels[tab];
   };
+
+  const loadTrips = useCallback(async () => {
+    try {
+      const data = await API.getTrips();
+      setTrips(data);
+    } catch (e) {
+      console.error("Failed to load trips", e);
+    }
+  }, []);
 
   useFocusEffect(
     useCallback(() => {
       let mounted = true;
 
-      const loadTrips = async () => {
+      const fetchTrips = async () => {
         try {
           setLoading(true);
           const data = await API.getTrips();
@@ -66,12 +77,18 @@ export default function TripsScreen() {
         }
       };
 
-      loadTrips();
+      fetchTrips();
       return () => {
         mounted = false;
       };
     }, [])
   );
+
+  const onRefresh = useCallback(async () => {
+    setRefreshing(true);
+    await loadTrips();
+    setRefreshing(false);
+  }, [loadTrips]);
 
   const toggleFavorite = async (id: string) => {
     const updatedFavorites = await toggleFavoriteStorage(id);
@@ -81,6 +98,30 @@ export default function TripsScreen() {
         isFavorite: updatedFavorites.includes(trip.id!),
       }))
     );
+  };
+
+  const handleTripPress = (trip: Trip) => {
+    router.push(`/trip/${trip.id}`);
+  };
+
+  const handleDeleteTrip = (trip: Trip) => {
+    Alert.alert(t("trips.deleteTrip"), t("trips.deleteConfirm"), [
+      { text: t("common.cancel"), style: "cancel" },
+      {
+        text: t("common.delete"),
+        style: "destructive",
+        onPress: async () => {
+          try {
+            await API.deleteTrip(trip.id!);
+            setTrips((prev) => prev.filter((t) => t.id !== trip.id));
+            Alert.alert(t("common.success"), t("trips.deleteSuccess"));
+          } catch (error) {
+            console.error("Failed to delete trip", error);
+            Alert.alert(t("common.error"), t("trips.deleteError"));
+          }
+        },
+      },
+    ]);
   };
 
   const filteredTrips = useMemo(() => {
@@ -210,12 +251,26 @@ export default function TripsScreen() {
     }
   };
 
+  const handleModalViewDetails = () => {
+    if (selectedTrip) {
+      setSelectedTrip(null);
+      router.push(`/trip/${selectedTrip.id}`);
+    }
+  };
+
+  const handleModalEdit = () => {
+    if (selectedTrip) {
+      setSelectedTrip(null);
+      router.push(`/modal/edit-trip?id=${selectedTrip.id}`);
+    }
+  };
+
   return (
     <SafeAreaView style={styles.container} edges={["top"]}>
       {/* Header */}
       <View style={styles.header}>
         <View style={styles.headerTop}>
-          <Text style={styles.headerTitle}>{t('trips.myTrips')}</Text>
+          <Text style={styles.headerTitle}>{t("trips.myTrips")}</Text>
           <TouchableOpacity
             style={styles.viewToggle}
             onPress={() => setViewMode(viewMode === "list" ? "map" : "list")}
@@ -232,15 +287,20 @@ export default function TripsScreen() {
           <Ionicons name="search" size={20} color="#9ca3af" />
           <TextInput
             style={styles.searchInput}
-            placeholder={t('trips.searchTrips')}
+            placeholder={t("trips.searchTrips")}
             value={query}
             onChangeText={setQuery}
             placeholderTextColor="#9ca3af"
           />
+          {query.length > 0 && (
+            <TouchableOpacity onPress={() => setQuery("")}>
+              <Ionicons name="close-circle" size={20} color="#9ca3af" />
+            </TouchableOpacity>
+          )}
         </View>
       </View>
 
-      {/* Tabs - Use View wrapper with fixed height */}
+      {/* Tabs */}
       <View style={styles.tabsContainer}>
         {tabs.map((tab) => (
           <TouchableOpacity
@@ -266,29 +326,41 @@ export default function TripsScreen() {
           style={styles.listScrollView}
           showsVerticalScrollIndicator={false}
           contentContainerStyle={styles.listContent}
+          refreshControl={
+            <RefreshControl
+              refreshing={refreshing}
+              onRefresh={onRefresh}
+              tintColor="#a855f7"
+              colors={["#a855f7"]}
+            />
+          }
         >
-          {loading && (
-            <Text style={styles.loadingText}>{t('common.loading')}</Text>
-          )}
+          {loading && <Text style={styles.loadingText}>Loading...</Text>}
 
           {!loading && filteredTrips.length === 0 && (
             <View style={styles.emptyContainer}>
               <Ionicons name="airplane-outline" size={64} color="#d1d5db" />
-              <Text style={styles.emptyText}>{t('trips.noTripsFound')}</Text>
+              <Text style={styles.emptyText}>No trips found</Text>
               <Text style={styles.emptySubtext}>
                 {selectedTab === "Past"
-                  ? t('trips.noTrips')
+                  ? "You don't have any past trips yet"
                   : selectedTab === "Upcoming"
-                  ? t('trips.noTrips')
+                  ? "You don't have any upcoming trips"
                   : selectedTab === "Favorites"
-                  ? t('favorites.noFavorites')
-                  : t('trips.createFirstTrip')}
+                  ? "You haven't favorited any trips"
+                  : "Start by adding your first trip!"}
               </Text>
             </View>
           )}
 
           {filteredTrips.map((trip) => (
-            <TouchableOpacity key={trip.id} style={styles.card}>
+            <TouchableOpacity
+              key={trip.id}
+              style={styles.card}
+              onPress={() => handleTripPress(trip)}
+              onLongPress={() => handleDeleteTrip(trip)}
+              delayLongPress={500}
+            >
               <View style={styles.imageContainer}>
                 <Image
                   source={
@@ -306,7 +378,10 @@ export default function TripsScreen() {
 
                 <TouchableOpacity
                   style={styles.favorite}
-                  onPress={() => toggleFavorite(trip.id!)}
+                  onPress={(e) => {
+                    e.stopPropagation();
+                    toggleFavorite(trip.id!);
+                  }}
                 >
                   <Ionicons
                     name={trip.isFavorite ? "heart" : "heart-outline"}
@@ -321,12 +396,29 @@ export default function TripsScreen() {
                 </View>
               </View>
 
-              <View style={styles.info}>
-                <Ionicons name="calendar-outline" size={16} color="#6b7280" />
-                <Text style={styles.date}>
-                  {new Date(trip.startDate).toLocaleDateString("fr-FR")} –{" "}
-                  {new Date(trip.endDate).toLocaleDateString("fr-FR")}
-                </Text>
+              <View style={styles.cardFooter}>
+                <View style={styles.info}>
+                  <Ionicons name="calendar-outline" size={16} color="#6b7280" />
+                  <Text style={styles.date}>
+                    {new Date(trip.startDate).toLocaleDateString("fr-FR")} –{" "}
+                    {new Date(trip.endDate).toLocaleDateString("fr-FR")}
+                  </Text>
+                </View>
+
+                <View style={styles.cardActions}>
+                  <TouchableOpacity
+                    style={styles.cardActionButton}
+                    onPress={() => router.push(`/modal/edit-trip?id=${trip.id}`)}
+                  >
+                    <Ionicons name="create-outline" size={18} color="#a855f7" />
+                  </TouchableOpacity>
+                  <TouchableOpacity
+                    style={styles.cardActionButton}
+                    onPress={() => handleDeleteTrip(trip)}
+                  >
+                    <Ionicons name="trash-outline" size={18} color="#ef4444" />
+                  </TouchableOpacity>
+                </View>
               </View>
             </TouchableOpacity>
           ))}
@@ -364,7 +456,7 @@ export default function TripsScreen() {
         <Ionicons name="add" size={28} color="white" />
       </TouchableOpacity>
 
-      {/* Trip Detail Modal */}
+      {/* Trip Detail Modal (from map) */}
       <Modal
         visible={!!selectedTrip}
         animationType="slide"
@@ -409,6 +501,41 @@ export default function TripsScreen() {
                     </Text>
                   )}
                 </View>
+
+                <View style={styles.modalActions}>
+                  <TouchableOpacity
+                    style={styles.modalActionButton}
+                    onPress={handleModalViewDetails}
+                  >
+                    <Ionicons name="eye-outline" size={20} color="#a855f7" />
+                    <Text style={styles.modalActionText}>
+                      {t("common.view")}
+                    </Text>
+                  </TouchableOpacity>
+
+                  <TouchableOpacity
+                    style={styles.modalActionButton}
+                    onPress={handleModalEdit}
+                  >
+                    <Ionicons name="create-outline" size={20} color="#a855f7" />
+                    <Text style={styles.modalActionText}>
+                      {t("common.edit")}
+                    </Text>
+                  </TouchableOpacity>
+
+                  <TouchableOpacity
+                    style={[styles.modalActionButton, styles.deleteAction]}
+                    onPress={() => {
+                      setSelectedTrip(null);
+                      handleDeleteTrip(selectedTrip);
+                    }}
+                  >
+                    <Ionicons name="trash-outline" size={20} color="#ef4444" />
+                    <Text style={styles.deleteActionText}>
+                      {t("common.delete")}
+                    </Text>
+                  </TouchableOpacity>
+                </View>
               </>
             )}
           </View>
@@ -421,11 +548,11 @@ export default function TripsScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "#f9fafb"
+    backgroundColor: "#f9fafb",
   },
   header: {
     padding: 24,
-    backgroundColor: "#fff"
+    backgroundColor: "#fff",
   },
   headerTop: {
     flexDirection: "row",
@@ -459,8 +586,6 @@ const styles = StyleSheet.create({
     fontSize: 16,
     color: "#111827",
   },
-
-  // Fixed tabs - use View instead of ScrollView
   tabsContainer: {
     flexDirection: "row",
     paddingHorizontal: 24,
@@ -483,10 +608,8 @@ const styles = StyleSheet.create({
     fontSize: 14,
   },
   tabTextActive: {
-    color: "#fff"
+    color: "#fff",
   },
-
-  // List
   listScrollView: {
     flex: 1,
   },
@@ -518,8 +641,6 @@ const styles = StyleSheet.create({
     fontSize: 14,
     paddingHorizontal: 40,
   },
-
-  // Cards
   card: {
     backgroundColor: "#fff",
     borderRadius: 24,
@@ -534,11 +655,11 @@ const styles = StyleSheet.create({
     height: 180,
     borderTopLeftRadius: 24,
     borderTopRightRadius: 24,
-    overflow: "hidden"
+    overflow: "hidden",
   },
   image: {
     width: "100%",
-    height: "100%"
+    height: "100%",
   },
   overlay: {
     ...StyleSheet.absoluteFillObject,
@@ -547,33 +668,49 @@ const styles = StyleSheet.create({
   favorite: {
     position: "absolute",
     top: 12,
-    right: 12
+    right: 12,
   },
   imageContent: {
     position: "absolute",
     bottom: 16,
-    left: 16
+    left: 16,
   },
   title: {
     color: "#fff",
     fontSize: 22,
-    fontWeight: "bold"
+    fontWeight: "bold",
   },
   location: {
     color: "#fff",
     marginTop: 4,
   },
-  info: {
+  cardFooter: {
     padding: 16,
     flexDirection: "row",
     alignItems: "center",
-    gap: 8
+    justifyContent: "space-between",
+  },
+  info: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 8,
+    flex: 1,
   },
   date: {
-    color: "#6b7280"
+    color: "#6b7280",
   },
-
-  // FAB
+  cardActions: {
+    flexDirection: "row",
+    gap: 8,
+  },
+  cardActionButton: {
+    width: 36,
+    height: 36,
+    borderRadius: 10,
+    backgroundColor: "#f3f4f6",
+    justifyContent: "center",
+    alignItems: "center",
+  },
   fab: {
     position: "absolute",
     bottom: 80,
@@ -590,13 +727,11 @@ const styles = StyleSheet.create({
     shadowRadius: 8,
     elevation: 6,
   },
-
-  // Map
   mapContainer: {
-    flex: 1
+    flex: 1,
   },
   mapWebView: {
-    flex: 1
+    flex: 1,
   },
   noLocationContainer: {
     flex: 1,
@@ -616,8 +751,6 @@ const styles = StyleSheet.create({
     textAlign: "center",
     marginTop: 8,
   },
-
-  // Modal
   modalOverlay: {
     flex: 1,
     backgroundColor: "rgba(0,0,0,0.5)",
@@ -628,7 +761,7 @@ const styles = StyleSheet.create({
     borderTopLeftRadius: 24,
     borderTopRightRadius: 24,
     padding: 24,
-    minHeight: 200,
+    minHeight: 250,
   },
   modalHeader: {
     flexDirection: "row",
@@ -642,7 +775,7 @@ const styles = StyleSheet.create({
     color: "#111827",
   },
   modalBody: {
-    gap: 12
+    gap: 12,
   },
   modalRow: {
     flexDirection: "row",
@@ -658,5 +791,33 @@ const styles = StyleSheet.create({
     color: "#6b7280",
     marginTop: 8,
     lineHeight: 20,
+  },
+  modalActions: {
+    flexDirection: "row",
+    gap: 12,
+    marginTop: 20,
+  },
+  modalActionButton: {
+    flex: 1,
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    gap: 6,
+    backgroundColor: "#faf5ff",
+    paddingVertical: 12,
+    borderRadius: 12,
+  },
+  modalActionText: {
+    color: "#a855f7",
+    fontSize: 14,
+    fontWeight: "600",
+  },
+  deleteAction: {
+    backgroundColor: "#fef2f2",
+  },
+  deleteActionText: {
+    color: "#ef4444",
+    fontSize: 14,
+    fontWeight: "600",
   },
 });

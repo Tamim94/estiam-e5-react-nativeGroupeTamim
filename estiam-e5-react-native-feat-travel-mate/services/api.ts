@@ -19,6 +19,17 @@ export interface Trip {
   };
 }
 
+export interface TripInput {
+  title: string;
+  destination: string;
+  startDate: string;
+  endDate: string;
+  description?: string;
+  image?: string;
+  photos?: string[];
+  location?: { latitude: number; longitude: number };
+}
+
 function normalizeDate(date?: string): string {
   if (!date) return "";
   if (/^\d{4}-\d{2}-\d{2}/.test(date)) return date;
@@ -49,6 +60,22 @@ function normalizeTrip(trip: any): Trip {
   };
 }
 
+function convertLocationToBackend(
+  location?: { latitude: number; longitude: number }
+): { lat: number; lng: number } | undefined {
+  if (!location) return undefined;
+  return { lat: location.latitude, lng: location.longitude };
+}
+
+async function getAuthHeaders(): Promise<Record<string, string>> {
+  const tokens = await auth.getTokens();
+  if (!tokens?.accessToken) throw new Error("Non authentifié");
+  return {
+    "Content-Type": "application/json",
+    Authorization: `Bearer ${tokens.accessToken}`,
+  };
+}
+
 export const API = {
   async uploadImage(uri: string): Promise<string> {
     const formData = new FormData();
@@ -68,41 +95,33 @@ export const API = {
     });
 
     if (!response.ok) throw new Error("Image upload failed");
-
     const data = await response.json();
     return data.url;
   },
 
-  async createTrip(trip: Trip & { location?: { latitude: number; longitude: number } }) {
+  async createTrip(trip: TripInput): Promise<Trip> {
     const isOnline = await OFFLINE.checkIsOnline();
 
-    // Convert frontend coords to backend format
     const payload = {
       ...trip,
-      location: trip.location
-        ? { lat: trip.location.latitude, lng: trip.location.longitude }
-        : undefined,
+      location: convertLocationToBackend(trip.location),
     };
 
     if (!isOnline) {
+      const localTrip = { ...payload, id: `local-${Date.now()}` };
       await OFFLINE.addToQueue({
         type: "CREATE",
         endpoint: "/trips",
         method: "POST",
         payload,
       });
-      return { ...payload, id: `local-${Date.now()}` };
+      return localTrip as Trip;
     }
 
-    const tokens = await auth.getTokens();
-    if (!tokens?.accessToken) throw new Error("Non authentifié");
-
+    const headers = await getAuthHeaders();
     const response = await fetch(`${config.mockBackendUrl}/trips`, {
       method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${tokens.accessToken}`,
-      },
+      headers,
       body: JSON.stringify(payload),
     });
 
@@ -115,17 +134,16 @@ export const API = {
 
     if (isOnline) {
       try {
-        const tokens = await auth.getTokens();
-        if (!tokens?.accessToken) throw new Error("Non authentifié");
-
+        const headers = await getAuthHeaders();
         const response = await fetch(`${config.mockBackendUrl}/trips`, {
-          headers: { Authorization: `Bearer ${tokens.accessToken}` },
+          headers,
         });
 
         if (!response.ok) throw new Error("Failed to fetch trips");
 
         const rawTrips = await response.json();
-        if (!Array.isArray(rawTrips)) throw new Error("Trips response is not an array");
+        if (!Array.isArray(rawTrips))
+          throw new Error("Trips response is not an array");
 
         const favorites = await getFavorites();
         const normalized = rawTrips.map((trip) => {
@@ -142,5 +160,119 @@ export const API = {
     }
 
     return (await OFFLINE.getCachedTrips()) || [];
+  },
+
+  async getTrip(id: string): Promise<Trip> {
+    const isOnline = await OFFLINE.checkIsOnline();
+
+    if (!isOnline) {
+      const cached = await OFFLINE.getCachedTrips();
+      const trip = cached?.find((t) => t.id === id);
+      if (!trip) throw new Error("Trip not found in cache");
+      return trip;
+    }
+
+    const headers = await getAuthHeaders();
+    const response = await fetch(`${config.mockBackendUrl}/trips/${id}`, {
+      headers,
+    });
+
+    if (!response.ok) throw new Error("Failed to fetch trip");
+
+    const trip = await response.json();
+    const favorites = await getFavorites();
+    const normalized = normalizeTrip(trip);
+
+    return { ...normalized, isFavorite: favorites.includes(normalized.id) };
+  },
+
+  async updateTrip(id: string, trip: Partial<TripInput>): Promise<Trip> {
+    const isOnline = await OFFLINE.checkIsOnline();
+
+    const payload = {
+      ...trip,
+      location: trip.location
+        ? convertLocationToBackend(trip.location)
+        : undefined,
+    };
+
+    if (!isOnline) {
+      await OFFLINE.addToQueue({
+        type: "UPDATE",
+        endpoint: `/trips/${id}`,
+        method: "PUT",
+        payload,
+      });
+
+      // Update local cache
+      const cached = await OFFLINE.getCachedTrips();
+      if (cached) {
+        const updated = cached.map((t) =>
+          t.id === id ? { ...t, ...payload } : t
+        );
+        await OFFLINE.cacheTrips(updated);
+      }
+
+      return { id, ...payload } as Trip;
+    }
+
+    const headers = await getAuthHeaders();
+    const response = await fetch(`${config.mockBackendUrl}/trips/${id}`, {
+      method: "PUT",
+      headers,
+      body: JSON.stringify(payload),
+    });
+
+    if (!response.ok) throw new Error("Failed to update trip");
+
+    const updated = await response.json();
+
+    // Update cache
+    const cached = await OFFLINE.getCachedTrips();
+    if (cached) {
+      const newCache = cached.map((t) =>
+        t.id === id ? normalizeTrip(updated) : t
+      );
+      await OFFLINE.cacheTrips(newCache);
+    }
+
+    return normalizeTrip(updated);
+  },
+
+  async deleteTrip(id: string): Promise<void> {
+    const isOnline = await OFFLINE.checkIsOnline();
+
+    if (!isOnline) {
+      await OFFLINE.addToQueue({
+        type: "DELETE",
+        endpoint: `/trips/${id}`,
+        method: "DELETE",
+        payload: { id },
+      });
+
+      // Remove from local cache
+      const cached = await OFFLINE.getCachedTrips();
+      if (cached) {
+        const filtered = cached.filter((t) => t.id !== id);
+        await OFFLINE.cacheTrips(filtered);
+      }
+
+      return;
+    }
+
+    const headers = await getAuthHeaders();
+    const response = await fetch(`${config.mockBackendUrl}/trips/${id}`, {
+      method: "DELETE",
+      headers,
+    });
+
+    if (!response.ok) throw new Error("Failed to delete trip");
+
+    // Remove from cache
+    const cached = await OFFLINE.getCachedTrips();
+    if (cached) {
+      const filtered = cached.filter((t) => t.id !== id);
+      await OFFLINE.cacheTrips(filtered);
+    }
   },
 };

@@ -149,10 +149,10 @@
   },
   {
     "id": "5dea4936-8265-4858-bbe7-b6c03f725577",
-    "title": "Trip to Tokyo in Mars",
+    "title": "Trip to Tokyo in Mars 2",
     "destination": "Tokyo, Japan",
-    "startDate": "01/01/2026",
-    "endDate": "07/01/2027",
+    "startDate": "2026-01-01",
+    "endDate": "2027-01-07",
     "image": "http://10.0.2.2:4000/uploads/1766103470114-a5494e1f-103c-406c-97d1-22d614d30267.jpeg",
     "description": "woooooo",
     "photos": [

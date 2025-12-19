@@ -212,7 +212,49 @@ app.post("/trips", authenticateToken, (req, res) => {
   saveTrips(trips);
   return res.status(201).json(newTrip);
 });
+// GET single trip
+app.get("/trips/:id", authenticateToken, (req, res) => {
+  const { id } = req.params;
+  const trip = trips.find((t) => t.id === id);
+  if (!trip) return res.status(404).json({ error: "Trip not found" });
+  return res.json(trip);
+});
 
+// UPDATE trip
+app.put("/trips/:id", authenticateToken, (req, res) => {
+  const { id } = req.params;
+  const payload = req.body || {};
+  const idx = trips.findIndex((t) => t.id === id);
+
+  if (idx === -1) return res.status(404).json({ error: "Trip not found" });
+
+  trips[idx] = {
+    ...trips[idx],
+    title: payload.title ?? trips[idx].title,
+    destination: payload.destination ?? trips[idx].destination,
+    startDate: payload.startDate ?? trips[idx].startDate,
+    endDate: payload.endDate ?? trips[idx].endDate,
+    description: payload.description ?? trips[idx].description,
+    image: payload.image ?? trips[idx].image,
+    photos: payload.photos ?? trips[idx].photos,
+    location: payload.location ?? trips[idx].location,
+  };
+
+  saveTrips(trips);
+  return res.json(trips[idx]);
+});
+
+// DELETE trip
+app.delete("/trips/:id", authenticateToken, (req, res) => {
+  const { id } = req.params;
+  const idx = trips.findIndex((t) => t.id === id);
+
+  if (idx === -1) return res.status(404).json({ error: "Trip not found" });
+
+  const deleted = trips.splice(idx, 1)[0];
+  saveTrips(trips);
+  return res.json({ message: "Trip deleted", trip: deleted });
+});
 app.post("/trips/:id/photos", authenticateToken, (req, res) => {
   const { id } = req.params;
   const { uri } = req.body || {};

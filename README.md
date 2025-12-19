@@ -71,8 +71,10 @@ Elle permet aux utilisateurs de créer, consulter et organiser leurs voyages, av
 - Upload réel des images avec progression
 - Listing des voyages depuis l'API (`GET /trips`)
 - Support offline (création mise en queue)
+- CRUD complet avec modification dans le backend mock DELETE / PUT / POST (DOSSIER MODAL  POUR Ajout +  Edition) 
 - Cache local des voyages
 - Recherche (titre + destination)
+- CARTE DE VOYAGE avec localisation INTERACTIVE avec Leaflet + OpenStreetMap 
 -  Mapview des voyages avec localisation (react native webview + leaflet + OpenStreetMap PSK JE NAI PAS DE CLE API GOOGLE MAPP!!)
 - Filtres disponibles :
     - All
