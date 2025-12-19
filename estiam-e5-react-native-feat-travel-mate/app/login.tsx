@@ -34,15 +34,15 @@ export default function LoginScreen() {
 
                 await login({ email, password });
 
-                await new Promise(resolve => setTimeout(resolve, 200));
+
                 await refreshAuth();
-                await new Promise(resolve => setTimeout(resolve, 100));
+
                 router.replace('/(tabs)');
             } else {
                 await register({ email, password, name });
-                await new Promise(resolve => setTimeout(resolve, 200));
+
                 await refreshAuth();
-                await new Promise(resolve => setTimeout(resolve, 100));
+
                 router.replace('/(tabs)');
             }
 
