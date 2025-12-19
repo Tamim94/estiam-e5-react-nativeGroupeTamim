@@ -49,6 +49,9 @@ Elle permet aux utilisateurs de créer, supprimer , update et  consulter et orga
    cd estiam-e5-react-native-feat-travel-mate
    npm install
    npx expo start
+   
+   ou npx expo start --tunnel  (si probleme de connection entre mobile et pc)
+   ou npx expo start -c (pour clear le cache si probleme)
    ```
 
 ### ⚠️ Notes importantes
@@ -144,3 +147,6 @@ npm run test:coverage - Run with coverage report
 - **Fichier `server.js`** : Adaptation de la gestion des URLs et des uploads pour assurer la compatibilité iOS/Android (le backend fourni ne gérait pas correctement Android avec localhost et uploads)
 
 ## Notifications aucune modification probleme de compatibilite avec expo sdk 53 donc le modifier serait risque pour la stabilite de lapp
+
+## Liens apk  expo go https://expo.dev/accounts/tamim94/projects/MyFirstApp/builds/6e267094-ac57-42cd-9c61-66e2de8b9bc6 (Android) (le backend n est pas sur un serveur public donc il va peut etre pas bien fonctionner )
+publier avec eas build
