@@ -6,11 +6,13 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import * as Device from 'expo-device';
 import { useNotifications } from "@/hooks/use-notifications";
 import { useEffect, useState } from "react";
+import { useTheme } from "@/contexts/theme-contexts";
 
 
 export default function NotificationScreen()    {
 
     const router = useRouter();
+    const { colors, isDarkMode } = useTheme();
     const [testResults, setTestResults] = useState<string[]>([]);
     const isSimulator = !Device.isDevice;
 
@@ -119,6 +121,243 @@ export default function NotificationScreen()    {
       const handleClearResults = async () => {
        await setTestResults([]);
     };
+
+  const styles = StyleSheet.create({
+    container: {
+      flex: 1,
+      backgroundColor: colors.background,
+    },
+    header: {
+      paddingHorizontal: 24,
+      paddingTop: 16,
+      paddingBottom: 40,
+      borderBottomLeftRadius: 32,
+      borderBottomRightRadius: 32,
+    },
+    headerTop: {
+      flexDirection: "row",
+      alignItems: "center",
+      marginBottom: 24,
+    },
+    backButton: {
+      width: 40,
+      height: 40,
+      borderRadius: 20,
+      backgroundColor: "rgba(255,255,255,0.2)",
+      justifyContent: "center",
+      alignItems: "center",
+      marginRight: 16,
+    },
+    headerTitle: {
+      fontSize: 28,
+      fontWeight: "bold",
+      color: "#fff",
+    },
+    placeholder: {
+      width: 40,
+    },
+    content: {
+      flex: 1,
+    },
+    scrollContent: {
+      padding: 24,
+    },
+    statusCard: {
+      backgroundColor: colors.card,
+      borderRadius: 16,
+      padding: 20,
+      marginBottom: 24,
+      shadowColor: "#000",
+      shadowOffset: { width: 0, height: 2 },
+      shadowOpacity: 0.05,
+      shadowRadius: 8,
+      elevation: 2,
+    },
+    section: {
+      marginBottom: 32,
+    },
+    sectionHeader: {
+      flexDirection: "row",
+      justifyContent: "space-between",
+      alignItems: "center",
+      marginBottom: 16,
+    },
+    sectionTitle: {
+      fontSize: 20,
+      fontWeight: "bold",
+      color: colors.text,
+      marginBottom: 16,
+    },
+    infoCard: {
+      backgroundColor: colors.card,
+      borderRadius: 16,
+      padding: 20,
+      gap: 12,
+      shadowColor: "#000",
+      shadowOffset: { width: 0, height: 2 },
+      shadowOpacity: 0.05,
+      shadowRadius: 8,
+      elevation: 2,
+    },
+    statusRow: {
+      flexDirection: "row",
+      alignItems: "center",
+      gap: 8,
+    },
+    statusText: {
+      fontSize: 16,
+      color: colors.text,
+      fontWeight: "500",
+    },
+    tokenContainer: {
+      backgroundColor: isDarkMode ? '#374151' : "#f3f4f6",
+      padding: 12,
+      borderRadius: 8,
+    },
+    tokenLabel: {
+      fontSize: 12,
+      color: colors.textSecondary,
+      marginBottom: 4,
+      fontWeight: "600",
+    },
+    tokenText: {
+      fontSize: 12,
+      color: colors.text,
+      fontFamily: Platform.OS === "ios" ? "Menlo" : "monospace",
+    },
+    badgeContainer: {
+      flexDirection: "row",
+      alignItems: "center",
+      gap: 8,
+    },
+    badgeLabel: {
+      fontSize: 16,
+      color: colors.text,
+      fontWeight: "500",
+    },
+    scheduledContainer: {
+      backgroundColor: isDarkMode ? "#1e3a5f" : "#dbeafe",
+      padding: 12,
+      borderRadius: 8,
+    },
+    scheduledLabel: {
+      fontSize: 14,
+      color: isDarkMode ? "#93c5fd" : "#1e40af",
+      fontWeight: "600",
+    },
+    button: {
+      flexDirection: "row",
+      alignItems: "center",
+      justifyContent: "center",
+      gap: 8,
+      paddingVertical: 14,
+      paddingHorizontal: 20,
+      borderRadius: 12,
+      marginBottom: 12,
+    },
+    buttonPrimary: {
+      backgroundColor: "#a855f7",
+    },
+    buttonSuccess: {
+      backgroundColor: "#10b981",
+    },
+    buttonInfo: {
+      backgroundColor: "#3b82f6",
+    },
+    buttonWarning: {
+      backgroundColor: "#f59e0b",
+    },
+    buttonDanger: {
+      backgroundColor: "#ef4444",
+    },
+    buttonSmall: {
+      flex: 1,
+      paddingVertical: 10,
+    },
+    buttonText: {
+      color: "#fff",
+      fontSize: 16,
+      fontWeight: "600",
+    },
+    buttonTextSmall: {
+      color: "#fff",
+      fontSize: 14,
+      fontWeight: "600",
+    },
+    buttonGrid: {
+      flexDirection: "row",
+      gap: 12,
+    },
+    buttonRow: {
+      flexDirection: "row",
+      gap: 12,
+    },
+    clearButton: {
+      color: "#a855f7",
+      fontSize: 14,
+      fontWeight: "600",
+    },
+    emptyResults: {
+      alignItems: "center",
+      paddingVertical: 40,
+    },
+    emptyText: {
+      fontSize: 16,
+      fontWeight: "600",
+      color: colors.textSecondary,
+      marginTop: 12,
+    },
+    emptySubtext: {
+      fontSize: 14,
+      color: colors.textSecondary,
+      marginTop: 4,
+      textAlign: "center",
+    },
+    resultsContainer: {
+      backgroundColor: colors.card,
+      borderRadius: 16,
+      padding: 16,
+      gap: 8,
+    },
+    resultItem: {
+      paddingVertical: 8,
+      borderBottomWidth: 1,
+      borderBottomColor: colors.border,
+    },
+    resultText: {
+      fontSize: 14,
+      color: colors.text,
+    },
+    simulatorWarning: {
+      backgroundColor: isDarkMode ? "#7c2d12" : "#fef3c7",
+      padding: 16,
+      borderRadius: 12,
+      flexDirection: "row",
+      alignItems: "flex-start",
+      gap: 12,
+      marginBottom: 24,
+    },
+    warningText: {
+      flex: 1,
+      fontSize: 14,
+      color: isDarkMode ? "#fbbf24" : "#92400e",
+      lineHeight: 20,
+    },
+    infoBox: {
+      flexDirection: "row",
+      backgroundColor: isDarkMode ? "#1e3a5f" : "#dbeafe",
+      borderRadius: 12,
+      padding: 16,
+      gap: 12,
+      marginBottom: 24,
+    },
+    infoText: {
+      flex: 1,
+      fontSize: 14,
+      color: isDarkMode ? "#93c5fd" : "#1e40af",
+      lineHeight: 20,
+    },
+  });
 
   return (
     <SafeAreaView style={styles.container} edges={['top']}>
@@ -275,210 +514,3 @@ export default function NotificationScreen()    {
   );
     
 }
-
-const styles = StyleSheet.create({
-    container: {
-        flex: 1,
-        backgroundColor: '#f9fafb',
-    },
-    header: {
-        paddingHorizontal: 24,
-        paddingTop: 16,
-        paddingBottom: 24,
-        borderBottomLeftRadius: 32,
-        borderBottomRightRadius: 32,
-    },
-    headerTop: {
-        flexDirection: 'row',
-        alignItems: 'center',
-        justifyContent: 'space-between',
-    },
-    backButton: {
-        width: 40,
-        height: 40,
-        borderRadius: 20,
-        backgroundColor: 'rgba(255, 255, 255, 0.2)',
-        justifyContent: 'center',
-        alignItems: 'center',
-    },
-    headerTitle: {
-        fontSize: 24,
-        fontWeight: 'bold',
-        color: '#fff',
-    },
-    placeholder: {
-        width: 40,
-    },
-    content: {
-        flex: 1,
-        padding: 24,
-    },
-    statusCard: {
-        backgroundColor: '#fff',
-        borderRadius: 16,
-        padding: 20,
-        marginBottom: 24,
-        shadowColor: '#000',
-        shadowOffset: { width: 0, height: 2 },
-        shadowOpacity: 0.1,
-        shadowRadius: 4,
-        elevation: 2,
-    },
-    statusRow: {
-        flexDirection: 'row',
-        alignItems: 'center',
-        gap: 8,
-        marginBottom: 12,
-    },
-    statusText: {
-        fontSize: 14,
-        color: '#111827',
-        fontWeight: '500',
-    },
-    tokenContainer: {
-        marginTop: 12,
-        paddingTop: 12,
-        borderTopWidth: 1,
-        borderTopColor: '#e5e7eb',
-    },
-    tokenLabel: {
-        fontSize: 12,
-        color: '#6b7280',
-        marginBottom: 4,
-    },
-    tokenText: {
-        fontSize: 11,
-        color: '#111827',
-        fontFamily: Platform.OS === 'ios' ? 'Courier' : 'monospace',
-    },
-    badgeContainer: {
-        marginTop: 12,
-        paddingTop: 12,
-        borderTopWidth: 1,
-        borderTopColor: '#e5e7eb',
-    },
-    badgeLabel: {
-        fontSize: 14,
-        color: '#111827',
-        fontWeight: '500',
-    },
-    scheduledContainer: {
-        marginTop: 8,
-    },
-    scheduledLabel: {
-        fontSize: 14,
-        color: '#6b7280',
-    },
-    section: {
-        marginBottom: 24,
-    },
-    sectionHeader: {
-        flexDirection: 'row',
-        justifyContent: 'space-between',
-        alignItems: 'center',
-        marginBottom: 16,
-    },
-    sectionTitle: {
-        fontSize: 20,
-        fontWeight: 'bold',
-        color: '#111827',
-        marginBottom: 16,
-    },
-    button: {
-        flexDirection: 'row',
-        alignItems: 'center',
-        justifyContent: 'center',
-        paddingVertical: 14,
-        paddingHorizontal: 20,
-        borderRadius: 12,
-        marginBottom: 12,
-        gap: 8,
-    },
-    buttonPrimary: {
-        backgroundColor: '#a855f7',
-    },
-    buttonSuccess: {
-        backgroundColor: '#10b981',
-    },
-    buttonInfo: {
-        backgroundColor: '#3b82f6',
-    },
-    buttonWarning: {
-        backgroundColor: '#f59e0b',
-    },
-    buttonDanger: {
-        backgroundColor: '#ef4444',
-    },
-    buttonSmall: {
-        flex: 1,
-        paddingVertical: 10,
-        paddingHorizontal: 16,
-    },
-    buttonRow: {
-        flexDirection: 'row',
-        gap: 12,
-    },
-    buttonText: {
-        color: '#fff',
-        fontSize: 16,
-        fontWeight: '600',
-    },
-    buttonTextSmall: {
-        color: '#fff',
-        fontSize: 14,
-        fontWeight: '600',
-    },
-    resultsContainer: {
-        backgroundColor: '#fff',
-        borderRadius: 12,
-        padding: 16,
-        maxHeight: 300,
-    },
-    resultItem: {
-        paddingVertical: 8,
-        borderBottomWidth: 1,
-        borderBottomColor: '#f3f4f6',
-    },
-    resultText: {
-        fontSize: 12,
-        color: '#111827',
-        fontFamily: Platform.OS === 'ios' ? 'Courier' : 'monospace',
-    },
-    emptyResults: {
-        backgroundColor: '#fff',
-        borderRadius: 12,
-        padding: 32,
-        alignItems: 'center',
-    },
-    emptyText: {
-        fontSize: 16,
-        color: '#6b7280',
-        marginTop: 12,
-        fontWeight: '500',
-    },
-    emptySubtext: {
-        fontSize: 14,
-        color: '#9ca3af',
-        marginTop: 4,
-        textAlign: 'center',
-    },
-    clearButton: {
-        color: '#a855f7',
-        fontSize: 14,
-        fontWeight: '600',
-    },
-    infoBox: {
-        flexDirection: 'row',
-        backgroundColor: '#dbeafe',
-        borderRadius: 12,
-        padding: 16,
-        gap: 12,
-        marginBottom: 24,
-    },
-    infoText: {
-        flex: 1,
-        fontSize: 14,
-        color: '#1e40af',
-        lineHeight: 20,
-    },
-});

@@ -17,8 +17,9 @@ import { LinearGradient } from "expo-linear-gradient";
 import Ionicons from "@expo/vector-icons/Ionicons";
 import { API, Trip } from "@/services/api";
 import { toggleFavorite as toggleFavoriteStorage } from "@/services/favorites";
-import IMAGES_SOURCES from ".";
+import IMAGES_SOURCES from "../(tabs)/trips";
 import { useTranslation } from "@/hooks/use-translation";
+import { useTheme } from "@/contexts/theme-contexts";
 
 const { width } = Dimensions.get("window");
 
@@ -26,6 +27,7 @@ export default function TripDetailScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const router = useRouter();
   const { t } = useTranslation();
+  const { colors, isDarkMode } = useTheme();
 
   const [trip, setTrip] = useState<Trip | null>(null);
   const [loading, setLoading] = useState(true);
@@ -123,20 +125,47 @@ export default function TripDetailScreen() {
     ? [trip.image, ...(trip.photos || [])].filter(Boolean)
     : [];
 
+  // --- Dynamic Styles ---
+  const dynamicStyles = {
+    container: {
+      backgroundColor: colors.background,
+    },
+    card: {
+      backgroundColor: colors.card,
+    },
+    text: {
+      color: colors.text,
+    },
+    textSecondary: {
+      color: colors.textSecondary,
+    },
+    iconContainer: {
+      backgroundColor: isDarkMode ? "#374151" : "#faf5ff",
+    },
+    editButton: {
+      backgroundColor: isDarkMode ? "#374151" : "#faf5ff",
+      borderColor: isDarkMode ? "#4b5563" : "#e9d5ff",
+    },
+    deleteButton: {
+      backgroundColor: isDarkMode ? "rgba(239, 68, 68, 0.1)" : "#fef2f2",
+      borderColor: isDarkMode ? "rgba(239, 68, 68, 0.3)" : "#fecaca",
+    }
+  };
+
   if (loading) {
     return (
-      <SafeAreaView style={styles.loadingContainer}>
+      <SafeAreaView style={[styles.loadingContainer, dynamicStyles.container]}>
         <ActivityIndicator size="large" color="#a855f7" />
-        <Text style={styles.loadingText}>{t("common.loading")}</Text>
+        <Text style={[styles.loadingText, dynamicStyles.textSecondary]}>{t("common.loading")}</Text>
       </SafeAreaView>
     );
   }
 
   if (!trip) {
     return (
-      <SafeAreaView style={styles.errorContainer}>
+      <SafeAreaView style={[styles.errorContainer, dynamicStyles.container]}>
         <Ionicons name="alert-circle-outline" size={64} color="#ef4444" />
-        <Text style={styles.errorText}>Trip not found</Text>
+        <Text style={[styles.errorText, dynamicStyles.text]}>Trip not found</Text>
         <TouchableOpacity style={styles.backButton} onPress={() => router.back()}>
           <Text style={styles.backButtonText}>{t("common.back")}</Text>
         </TouchableOpacity>
@@ -145,7 +174,7 @@ export default function TripDetailScreen() {
   }
 
   return (
-    <View style={styles.container}>
+    <View style={[styles.container, dynamicStyles.container]}>
       <ScrollView showsVerticalScrollIndicator={false}>
         {/* Hero Image */}
         <View style={styles.heroContainer}>
@@ -191,8 +220,8 @@ export default function TripDetailScreen() {
               )}
             </>
           ) : (
-            <View style={styles.noImageContainer}>
-              <Ionicons name="image-outline" size={64} color="#d1d5db" />
+            <View style={[styles.noImageContainer, { backgroundColor: isDarkMode ? '#374151' : '#e5e7eb' }]}>
+              <Ionicons name="image-outline" size={64} color="#9ca3af" />
             </View>
           )}
 
@@ -236,27 +265,27 @@ export default function TripDetailScreen() {
         {/* Content */}
         <View style={styles.content}>
           {/* Date Card */}
-          <View style={styles.card}>
+          <View style={[styles.card, dynamicStyles.card]}>
             <View style={styles.cardHeader}>
-              <View style={styles.iconContainer}>
+              <View style={[styles.iconContainer, dynamicStyles.iconContainer]}>
                 <Ionicons name="calendar" size={20} color="#a855f7" />
               </View>
-              <Text style={styles.cardTitle}>{t("trips.dates")}</Text>
+              <Text style={[styles.cardTitle, dynamicStyles.text]}>{t("trips.dates")}</Text>
             </View>
 
             <View style={styles.dateInfo}>
               <View style={styles.dateRow}>
-                <Text style={styles.dateLabel}>{t("addTrip.startDate")}</Text>
-                <Text style={styles.dateValue}>{formatDate(trip.startDate)}</Text>
+                <Text style={[styles.dateLabel, dynamicStyles.textSecondary]}>{t("addTrip.startDate")}</Text>
+                <Text style={[styles.dateValue, dynamicStyles.text]}>{formatDate(trip.startDate)}</Text>
               </View>
-              <View style={styles.dateSeparator} />
+              <View style={[styles.dateSeparator, { backgroundColor: isDarkMode ? '#374151' : '#f3f4f6' }]} />
               <View style={styles.dateRow}>
-                <Text style={styles.dateLabel}>{t("addTrip.endDate")}</Text>
-                <Text style={styles.dateValue}>{formatDate(trip.endDate)}</Text>
+                <Text style={[styles.dateLabel, dynamicStyles.textSecondary]}>{t("addTrip.endDate")}</Text>
+                <Text style={[styles.dateValue, dynamicStyles.text]}>{formatDate(trip.endDate)}</Text>
               </View>
             </View>
 
-            <View style={styles.durationBadge}>
+            <View style={[styles.durationBadge, dynamicStyles.iconContainer]}>
               <Ionicons name="time-outline" size={16} color="#a855f7" />
               <Text style={styles.durationText}>
                 {getDuration(trip.startDate, trip.endDate)} {t("trips.days")}
@@ -266,15 +295,15 @@ export default function TripDetailScreen() {
 
           {/* Location Card */}
           {trip.location && (
-            <View style={styles.card}>
+            <View style={[styles.card, dynamicStyles.card]}>
               <View style={styles.cardHeader}>
-                <View style={styles.iconContainer}>
+                <View style={[styles.iconContainer, dynamicStyles.iconContainer]}>
                   <Ionicons name="navigate" size={20} color="#a855f7" />
                 </View>
-                <Text style={styles.cardTitle}>{t("trips.coordinates")}</Text>
+                <Text style={[styles.cardTitle, dynamicStyles.text]}>{t("trips.coordinates")}</Text>
               </View>
 
-              <Text style={styles.coordsText}>
+              <Text style={[styles.coordsText, dynamicStyles.textSecondary]}>
                 📍 {trip.location.lat.toFixed(4)}, {trip.location.lng.toFixed(4)}
               </Text>
             </View>
@@ -282,26 +311,26 @@ export default function TripDetailScreen() {
 
           {/* Description Card */}
           {trip.description && (
-            <View style={styles.card}>
+            <View style={[styles.card, dynamicStyles.card]}>
               <View style={styles.cardHeader}>
-                <View style={styles.iconContainer}>
+                <View style={[styles.iconContainer, dynamicStyles.iconContainer]}>
                   <Ionicons name="document-text" size={20} color="#a855f7" />
                 </View>
-                <Text style={styles.cardTitle}>{t("addTrip.description")}</Text>
+                <Text style={[styles.cardTitle, dynamicStyles.text]}>{t("addTrip.description")}</Text>
               </View>
 
-              <Text style={styles.descriptionText}>{trip.description}</Text>
+              <Text style={[styles.descriptionText, dynamicStyles.text]}>{trip.description}</Text>
             </View>
           )}
 
           {/* Photos Gallery */}
           {trip.photos && trip.photos.length > 0 && (
-            <View style={styles.card}>
+            <View style={[styles.card, dynamicStyles.card]}>
               <View style={styles.cardHeader}>
-                <View style={styles.iconContainer}>
+                <View style={[styles.iconContainer, dynamicStyles.iconContainer]}>
                   <Ionicons name="images" size={20} color="#a855f7" />
                 </View>
-                <Text style={styles.cardTitle}>
+                <Text style={[styles.cardTitle, dynamicStyles.text]}>
                   {t("trips.photos")} ({trip.photos.length})
                 </Text>
               </View>
@@ -325,13 +354,13 @@ export default function TripDetailScreen() {
 
           {/* Action Buttons */}
           <View style={styles.actionButtons}>
-            <TouchableOpacity style={styles.editButton} onPress={handleEdit}>
+            <TouchableOpacity style={[styles.editButton, dynamicStyles.editButton]} onPress={handleEdit}>
               <Ionicons name="create-outline" size={20} color="#a855f7" />
               <Text style={styles.editButtonText}>{t("common.edit")}</Text>
             </TouchableOpacity>
 
             <TouchableOpacity
-              style={styles.deleteButton}
+              style={[styles.deleteButton, dynamicStyles.deleteButton]}
               onPress={handleDelete}
               disabled={deleting}
             >
@@ -358,30 +387,25 @@ export default function TripDetailScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "#f9fafb",
   },
   loadingContainer: {
     flex: 1,
     justifyContent: "center",
     alignItems: "center",
-    backgroundColor: "#f9fafb",
   },
   loadingText: {
     marginTop: 12,
-    color: "#6b7280",
     fontSize: 16,
   },
   errorContainer: {
     flex: 1,
     justifyContent: "center",
     alignItems: "center",
-    backgroundColor: "#f9fafb",
     padding: 24,
   },
   errorText: {
     marginTop: 16,
     fontSize: 18,
-    color: "#374151",
     fontWeight: "600",
   },
   backButton: {
@@ -406,7 +430,6 @@ const styles = StyleSheet.create({
   noImageContainer: {
     width: width,
     height: 300,
-    backgroundColor: "#e5e7eb",
     justifyContent: "center",
     alignItems: "center",
   },
@@ -480,7 +503,6 @@ const styles = StyleSheet.create({
     marginTop: -20,
   },
   card: {
-    backgroundColor: "white",
     borderRadius: 20,
     padding: 20,
     marginBottom: 16,
@@ -500,14 +522,12 @@ const styles = StyleSheet.create({
     width: 40,
     height: 40,
     borderRadius: 12,
-    backgroundColor: "#faf5ff",
     justifyContent: "center",
     alignItems: "center",
   },
   cardTitle: {
     fontSize: 16,
     fontWeight: "600",
-    color: "#111827",
   },
   dateInfo: {
     gap: 12,
@@ -518,23 +538,19 @@ const styles = StyleSheet.create({
     alignItems: "center",
   },
   dateLabel: {
-    color: "#6b7280",
     fontSize: 14,
   },
   dateValue: {
-    color: "#111827",
     fontSize: 14,
     fontWeight: "500",
   },
   dateSeparator: {
     height: 1,
-    backgroundColor: "#f3f4f6",
   },
   durationBadge: {
     flexDirection: "row",
     alignItems: "center",
     gap: 6,
-    backgroundColor: "#faf5ff",
     paddingHorizontal: 12,
     paddingVertical: 8,
     borderRadius: 12,
@@ -547,11 +563,9 @@ const styles = StyleSheet.create({
     fontWeight: "600",
   },
   coordsText: {
-    color: "#374151",
     fontSize: 14,
   },
   descriptionText: {
-    color: "#374151",
     fontSize: 15,
     lineHeight: 24,
   },
@@ -577,11 +591,9 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
     gap: 8,
-    backgroundColor: "#faf5ff",
     paddingVertical: 16,
     borderRadius: 16,
     borderWidth: 2,
-    borderColor: "#e9d5ff",
   },
   editButtonText: {
     color: "#a855f7",
@@ -594,11 +606,9 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
     gap: 8,
-    backgroundColor: "#fef2f2",
     paddingVertical: 16,
     borderRadius: 16,
     borderWidth: 2,
-    borderColor: "#fecaca",
   },
   deleteButtonText: {
     color: "#ef4444",

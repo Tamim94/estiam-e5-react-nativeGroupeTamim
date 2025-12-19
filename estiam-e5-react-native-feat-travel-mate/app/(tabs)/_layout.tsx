@@ -3,28 +3,29 @@ import React from 'react';
 import { Platform } from 'react-native';
 import Ionicons from '@expo/vector-icons/Ionicons';
 import { HapticTab } from '@/components/haptic-tab';
-import { useColorScheme } from '@/hooks/use-color-scheme';
 import { useTranslation } from '@/hooks/use-translation';
+import { useTheme } from '@/contexts/theme-contexts';
 
 // Using the same Purple from your Home/Profile screens
 const PRIMARY_COLOR = '#a855f7';
 const INACTIVE_COLOR = '#9ca3af'; // Gray
 
 export default function TabLayout() {
-  const colorScheme = useColorScheme();
   const { t } = useTranslation();
+  const { isDarkMode, colors } = useTheme();
 
   return (
     <Tabs
       screenOptions={{
         // Set the active color to your theme purple
         tabBarActiveTintColor: PRIMARY_COLOR,
-        tabBarInactiveTintColor: INACTIVE_COLOR,
+        tabBarInactiveTintColor: isDarkMode ? '#9ca3af' : '#6b7280',
         headerShown: false,
         tabBarButton: HapticTab,
         // Styling the Tab Bar to look cleaner
         tabBarStyle: {
-            backgroundColor: 'white',
+            backgroundColor: colors.card,
+            borderTopColor: colors.border,
             borderTopWidth: 0,
             elevation: 0, // Remove shadow on Android
             shadowColor: '#000', // Subtle shadow on iOS
@@ -38,6 +39,7 @@ export default function TabLayout() {
         tabBarLabelStyle: {
             fontSize: 12,
             fontWeight: '500',
+            color: colors.text,
         }
       }}>
       <Tabs.Screen

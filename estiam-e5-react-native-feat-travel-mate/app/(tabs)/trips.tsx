@@ -17,13 +17,16 @@ import Ionicons from "@expo/vector-icons/Ionicons";
 import { useCallback, useMemo, useState } from "react";
 import { useRouter } from "expo-router";
 import { API, Trip } from "@/services/api";
-import IMAGES_SOURCES from "./index";
+import IMAGES_SOURCES from "./trips"; // Ensure this path is correct
 import { toggleFavorite as toggleFavoriteStorage } from "@/services/favorites";
 import { useTranslation } from "@/hooks/use-translation";
+import { useTheme } from "@/contexts/theme-contexts";
 
 export default function TripsScreen() {
   const router = useRouter();
   const { t } = useTranslation();
+  // Get theme values
+  const { colors, isDarkMode } = useTheme();
 
   const [trips, setTrips] = useState<Trip[]>([]);
   const [loading, setLoading] = useState(true);
@@ -64,7 +67,6 @@ export default function TripsScreen() {
   useFocusEffect(
     useCallback(() => {
       let mounted = true;
-
       const fetchTrips = async () => {
         try {
           setLoading(true);
@@ -76,7 +78,6 @@ export default function TripsScreen() {
           if (mounted) setLoading(false);
         }
       };
-
       fetchTrips();
       return () => {
         mounted = false;
@@ -126,18 +127,11 @@ export default function TripsScreen() {
 
   const filteredTrips = useMemo(() => {
     const now = new Date();
-
     return trips
       .filter((trip) => {
-        if (selectedTab === "Upcoming") {
-          return new Date(trip.startDate) > now;
-        }
-        if (selectedTab === "Past") {
-          return new Date(trip.endDate) < now;
-        }
-        if (selectedTab === "Favorites") {
-          return trip.isFavorite;
-        }
+        if (selectedTab === "Upcoming") return new Date(trip.startDate) > now;
+        if (selectedTab === "Past") return new Date(trip.endDate) < now;
+        if (selectedTab === "Favorites") return trip.isFavorite;
         return true;
       })
       .filter((trip) => {
@@ -195,7 +189,7 @@ export default function TripsScreen() {
         <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
         <style>
           * { margin: 0; padding: 0; box-sizing: border-box; }
-          #map { width: 100%; height: 100vh; }
+          #map { width: 100%; height: 100vh; background-color: ${isDarkMode ? '#1f2937' : '#fff'}; }
         </style>
       </head>
       <body>
@@ -265,14 +259,69 @@ export default function TripsScreen() {
     }
   };
 
+  // --- Dynamic Styles based on Theme ---
+  const dynamicStyles = {
+    container: {
+      backgroundColor: colors.background,
+    },
+    header: {
+      backgroundColor: colors.backgroundSecondary, // Changed from card to match iOS style headers usually
+    },
+    headerTitle: {
+      color: colors.text,
+    },
+    viewToggle: {
+      backgroundColor: isDarkMode ? "#374151" : "#faf5ff",
+    },
+    searchBar: {
+      backgroundColor: isDarkMode ? "#374151" : "#f3f4f6",
+    },
+    searchInput: {
+      color: colors.text,
+    },
+    tabsContainer: {
+      backgroundColor: colors.background,
+    },
+    tab: (active: boolean) => ({
+      backgroundColor: active ? "#a855f7" : isDarkMode ? "#374151" : "#e5e7eb",
+    }),
+    tabText: (active: boolean) => ({
+      color: active ? "#fff" : colors.textSecondary,
+    }),
+    card: {
+      backgroundColor: colors.card,
+    },
+    dateText: {
+      color: colors.textSecondary, // Fixes dark mode date visibility
+    },
+    cardActionButton: {
+      backgroundColor: isDarkMode ? "#374151" : "#f3f4f6", // Fixes button visibility
+    },
+    modalContent: {
+      backgroundColor: colors.card,
+    },
+    modalText: {
+      color: colors.text,
+    },
+    modalDescription: {
+      color: colors.textSecondary,
+    },
+    loadingText: {
+      color: colors.textSecondary,
+    },
+    emptyText: {
+      color: colors.textSecondary,
+    },
+  };
+
   return (
-    <SafeAreaView style={styles.container} edges={["top"]}>
+    <SafeAreaView style={[styles.container, dynamicStyles.container]} edges={["top"]}>
       {/* Header */}
-      <View style={styles.header}>
+      <View style={[styles.header, dynamicStyles.header]}>
         <View style={styles.headerTop}>
-          <Text style={styles.headerTitle}>{t("trips.myTrips")}</Text>
+          <Text style={[styles.headerTitle, dynamicStyles.headerTitle]}>{t("trips.myTrips")}</Text>
           <TouchableOpacity
-            style={styles.viewToggle}
+            style={[styles.viewToggle, dynamicStyles.viewToggle]}
             onPress={() => setViewMode(viewMode === "list" ? "map" : "list")}
           >
             <Ionicons
@@ -283,10 +332,10 @@ export default function TripsScreen() {
           </TouchableOpacity>
         </View>
 
-        <View style={styles.searchBar}>
+        <View style={[styles.searchBar, dynamicStyles.searchBar]}>
           <Ionicons name="search" size={20} color="#9ca3af" />
           <TextInput
-            style={styles.searchInput}
+            style={[styles.searchInput, dynamicStyles.searchInput]}
             placeholder={t("trips.searchTrips")}
             value={query}
             onChangeText={setQuery}
@@ -301,19 +350,14 @@ export default function TripsScreen() {
       </View>
 
       {/* Tabs */}
-      <View style={styles.tabsContainer}>
+      <View style={[styles.tabsContainer, dynamicStyles.tabsContainer]}>
         {tabs.map((tab) => (
           <TouchableOpacity
             key={tab}
-            style={[styles.tab, selectedTab === tab && styles.tabActive]}
+            style={[styles.tab, dynamicStyles.tab(selectedTab === tab)]}
             onPress={() => setSelectedTab(tab)}
           >
-            <Text
-              style={[
-                styles.tabText,
-                selectedTab === tab && styles.tabTextActive,
-              ]}
-            >
+            <Text style={[styles.tabText, dynamicStyles.tabText(selectedTab === tab)]}>
               {getTabLabel(tab)}
             </Text>
           </TouchableOpacity>
@@ -335,12 +379,12 @@ export default function TripsScreen() {
             />
           }
         >
-          {loading && <Text style={styles.loadingText}>Loading...</Text>}
+          {loading && <Text style={[styles.loadingText, dynamicStyles.loadingText]}>Loading...</Text>}
 
           {!loading && filteredTrips.length === 0 && (
             <View style={styles.emptyContainer}>
               <Ionicons name="airplane-outline" size={64} color="#d1d5db" />
-              <Text style={styles.emptyText}>No trips found</Text>
+              <Text style={[styles.emptyText, dynamicStyles.emptyText]}>No trips found</Text>
               <Text style={styles.emptySubtext}>
                 {selectedTab === "Past"
                   ? "You don't have any past trips yet"
@@ -356,7 +400,7 @@ export default function TripsScreen() {
           {filteredTrips.map((trip) => (
             <TouchableOpacity
               key={trip.id}
-              style={styles.card}
+              style={[styles.card, dynamicStyles.card]}
               onPress={() => handleTripPress(trip)}
               onLongPress={() => handleDeleteTrip(trip)}
               delayLongPress={500}
@@ -365,9 +409,7 @@ export default function TripsScreen() {
                 <Image
                   source={
                     IMAGES_SOURCES[trip.image as keyof typeof IMAGES_SOURCES]
-                      ? IMAGES_SOURCES[
-                          trip.image as keyof typeof IMAGES_SOURCES
-                        ]
+                      ? IMAGES_SOURCES[trip.image as keyof typeof IMAGES_SOURCES]
                       : trip.image
                       ? { uri: trip.image }
                       : undefined
@@ -398,8 +440,8 @@ export default function TripsScreen() {
 
               <View style={styles.cardFooter}>
                 <View style={styles.info}>
-                  <Ionicons name="calendar-outline" size={16} color="#6b7280" />
-                  <Text style={styles.date}>
+                  <Ionicons name="calendar-outline" size={16} color={colors.textSecondary} />
+                  <Text style={[styles.date, dynamicStyles.dateText]}>
                     {new Date(trip.startDate).toLocaleDateString("fr-FR")} –{" "}
                     {new Date(trip.endDate).toLocaleDateString("fr-FR")}
                   </Text>
@@ -407,13 +449,13 @@ export default function TripsScreen() {
 
                 <View style={styles.cardActions}>
                   <TouchableOpacity
-                    style={styles.cardActionButton}
+                    style={[styles.cardActionButton, dynamicStyles.cardActionButton]}
                     onPress={() => router.push(`/modal/edit-trip?id=${trip.id}`)}
                   >
                     <Ionicons name="create-outline" size={18} color="#a855f7" />
                   </TouchableOpacity>
                   <TouchableOpacity
-                    style={styles.cardActionButton}
+                    style={[styles.cardActionButton, dynamicStyles.cardActionButton]}
                     onPress={() => handleDeleteTrip(trip)}
                   >
                     <Ionicons name="trash-outline" size={18} color="#ef4444" />
@@ -430,7 +472,7 @@ export default function TripsScreen() {
           {tripsWithLocation.length === 0 ? (
             <View style={styles.noLocationContainer}>
               <Ionicons name="map-outline" size={64} color="#d1d5db" />
-              <Text style={styles.noLocationText}>
+              <Text style={[styles.noLocationText, dynamicStyles.emptyText]}>
                 Aucun voyage avec localisation
               </Text>
               <Text style={styles.noLocationSubtext}>
@@ -464,27 +506,27 @@ export default function TripsScreen() {
         onRequestClose={() => setSelectedTrip(null)}
       >
         <View style={styles.modalOverlay}>
-          <View style={styles.modalContent}>
+          <View style={[styles.modalContent, dynamicStyles.modalContent]}>
             {selectedTrip && (
               <>
                 <View style={styles.modalHeader}>
-                  <Text style={styles.modalTitle}>{selectedTrip.title}</Text>
+                  <Text style={[styles.modalTitle, dynamicStyles.modalText]}>{selectedTrip.title}</Text>
                   <TouchableOpacity onPress={() => setSelectedTrip(null)}>
-                    <Ionicons name="close" size={24} color="#6b7280" />
+                    <Ionicons name="close" size={24} color={colors.textSecondary} />
                   </TouchableOpacity>
                 </View>
 
                 <View style={styles.modalBody}>
                   <View style={styles.modalRow}>
                     <Ionicons name="location" size={18} color="#a855f7" />
-                    <Text style={styles.modalText}>
+                    <Text style={[styles.modalText, dynamicStyles.modalText]}>
                       {selectedTrip.destination}
                     </Text>
                   </View>
 
                   <View style={styles.modalRow}>
                     <Ionicons name="calendar" size={18} color="#a855f7" />
-                    <Text style={styles.modalText}>
+                    <Text style={[styles.modalText, dynamicStyles.modalText]}>
                       {new Date(selectedTrip.startDate).toLocaleDateString(
                         "fr-FR"
                       )}{" "}
@@ -496,7 +538,7 @@ export default function TripsScreen() {
                   </View>
 
                   {selectedTrip.description && (
-                    <Text style={styles.modalDescription}>
+                    <Text style={[styles.modalDescription, dynamicStyles.modalDescription]}>
                       {selectedTrip.description}
                     </Text>
                   )}
@@ -548,11 +590,9 @@ export default function TripsScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "#f9fafb",
   },
   header: {
     padding: 24,
-    backgroundColor: "#fff",
   },
   headerTop: {
     flexDirection: "row",
@@ -563,20 +603,17 @@ const styles = StyleSheet.create({
   headerTitle: {
     fontSize: 32,
     fontWeight: "bold",
-    color: "#111827",
   },
   viewToggle: {
     width: 44,
     height: 44,
     borderRadius: 12,
-    backgroundColor: "#faf5ff",
     justifyContent: "center",
     alignItems: "center",
   },
   searchBar: {
     flexDirection: "row",
     alignItems: "center",
-    backgroundColor: "#f3f4f6",
     borderRadius: 16,
     padding: 12,
     gap: 12,
@@ -584,31 +621,21 @@ const styles = StyleSheet.create({
   searchInput: {
     flex: 1,
     fontSize: 16,
-    color: "#111827",
   },
   tabsContainer: {
     flexDirection: "row",
     paddingHorizontal: 24,
     paddingVertical: 16,
-    backgroundColor: "#f9fafb",
     gap: 8,
   },
   tab: {
     paddingHorizontal: 16,
     paddingVertical: 10,
     borderRadius: 20,
-    backgroundColor: "#e5e7eb",
-  },
-  tabActive: {
-    backgroundColor: "#a855f7",
   },
   tabText: {
-    color: "#374151",
     fontWeight: "600",
     fontSize: 14,
-  },
-  tabTextActive: {
-    color: "#fff",
   },
   listScrollView: {
     flex: 1,
@@ -619,7 +646,6 @@ const styles = StyleSheet.create({
   loadingText: {
     textAlign: "center",
     marginTop: 40,
-    color: "#6b7280",
     fontSize: 16,
   },
   emptyContainer: {
@@ -630,19 +656,16 @@ const styles = StyleSheet.create({
   emptyText: {
     textAlign: "center",
     marginTop: 16,
-    color: "#6b7280",
     fontSize: 18,
     fontWeight: "600",
   },
   emptySubtext: {
     textAlign: "center",
     marginTop: 8,
-    color: "#9ca3af",
     fontSize: 14,
     paddingHorizontal: 40,
   },
   card: {
-    backgroundColor: "#fff",
     borderRadius: 24,
     marginBottom: 16,
     shadowColor: "#000",
@@ -697,7 +720,7 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   date: {
-    color: "#6b7280",
+    // color handled dynamically
   },
   cardActions: {
     flexDirection: "row",
@@ -707,7 +730,6 @@ const styles = StyleSheet.create({
     width: 36,
     height: 36,
     borderRadius: 10,
-    backgroundColor: "#f3f4f6",
     justifyContent: "center",
     alignItems: "center",
   },
@@ -742,7 +764,6 @@ const styles = StyleSheet.create({
   noLocationText: {
     fontSize: 18,
     fontWeight: "600",
-    color: "#6b7280",
     marginTop: 16,
   },
   noLocationSubtext: {
@@ -757,7 +778,6 @@ const styles = StyleSheet.create({
     justifyContent: "flex-end",
   },
   modalContent: {
-    backgroundColor: "#fff",
     borderTopLeftRadius: 24,
     borderTopRightRadius: 24,
     padding: 24,
@@ -772,7 +792,6 @@ const styles = StyleSheet.create({
   modalTitle: {
     fontSize: 20,
     fontWeight: "bold",
-    color: "#111827",
   },
   modalBody: {
     gap: 12,
@@ -784,11 +803,9 @@ const styles = StyleSheet.create({
   },
   modalText: {
     fontSize: 15,
-    color: "#374151",
   },
   modalDescription: {
     fontSize: 14,
-    color: "#6b7280",
     marginTop: 8,
     lineHeight: 20,
   },

@@ -14,45 +14,41 @@ import {
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useState, useCallback } from 'react';
 import { useFocusEffect } from '@react-navigation/native';
-import { API, Trip } from '@/services/api';
+import { API } from '@/services/api';
 import { useTranslation } from '@/hooks/use-translation';
+// Import theme hook
+import { useTheme } from '@/contexts/theme-contexts';
 
 export default function ProfileScreen() {
     const router = useRouter();
     const { logout } = useAuth();
     const { t, switchLanguage, currentLanguage } = useTranslation();
 
+    // Get theme functions
+    const { themeMode, setThemeMode, isDarkMode, colors } = useTheme();
+
     const [isEditing, setIsEditing] = useState(false);
     const [firstName, setFirstName] = useState('Odilon');
     const [lastName, setLastName] = useState('Hema');
     const [avatar, setAvatar] = useState('😎');
 
-    // State for dynamic stats
     const [counts, setCounts] = useState({
         trips: 0,
         photos: 0,
         favorites: 0
     });
 
-    // Fetch data when screen comes into focus
     useFocusEffect(
         useCallback(() => {
             let mounted = true;
-
             const loadStats = async () => {
                 try {
                     const tripsData = await API.getTrips();
-
                     if (mounted) {
-                        // 1. Total Trips
                         const totalTrips = tripsData.length;
-
-                        // 2. Total Photos (Sum of all photo arrays)
                         const totalPhotos = tripsData.reduce((acc, trip) => {
                             return acc + (trip.photos ? trip.photos.length : 0);
                         }, 0);
-
-                        // 3. Total Favorites
                         const totalFavorites = tripsData.filter(t => t.isFavorite).length;
 
                         setCounts({
@@ -65,16 +61,11 @@ export default function ProfileScreen() {
                     console.error("Failed to load profile stats", e);
                 }
             };
-
             loadStats();
-
-            return () => {
-                mounted = false;
-            };
+            return () => { mounted = false; };
         }, [])
     );
 
-    // Use the state variables in your stats array
     const stats = [
         {
             label: t('trips.title'),
@@ -99,6 +90,68 @@ export default function ProfileScreen() {
     const handleSave = () => {
         setIsEditing(false);
         Alert.alert(t('common.success'));
+    };
+
+    // Helper to get display text for theme
+    const getThemeLabel = () => {
+        switch(themeMode) {
+            case 'light': return currentLanguage === 'fr' ? 'Clair' : 'Light';
+            case 'dark': return currentLanguage === 'fr' ? 'Sombre' : 'Dark';
+            case 'system': return currentLanguage === 'fr' ? 'Automatique' : 'System';
+        }
+    };
+
+    // Generate styles based on theme
+    const styles = StyleSheet.create({
+        container: { flex: 1, backgroundColor: colors.background },
+        header: { paddingHorizontal: 24, paddingTop: 16, paddingBottom: 128, borderBottomLeftRadius: 32, borderBottomRightRadius: 32 },
+        headerTitle: { fontSize: 32, fontWeight: 'bold', color: 'white', marginBottom: 32 },
+        profileCard: { backgroundColor: colors.card, borderRadius: 24, padding: 24, elevation: 4, shadowColor: '#000', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.1, shadowRadius: 8 },
+        profileHeader: { flexDirection: 'row', alignItems: 'center', marginBottom: 24, gap: 16 },
+        avatar: { width: 80, height: 80, borderRadius: 40, backgroundColor: isDarkMode ? '#374151' : '#faf5ff', justifyContent: 'center', alignItems: 'center' },
+        avatarEmoji: { fontSize: 40 },
+        profileInfo: { flex: 1 },
+        profileName: { fontSize: 24, fontWeight: 'bold', color: colors.text },
+        profileEmail: { fontSize: 14, color: colors.textSecondary },
+        statsGrid: { flexDirection: 'row', gap: 12 },
+        statItem: { flex: 1, alignItems: 'center' },
+        statIcon: { width: 48, height: 48, borderRadius: 16, justifyContent: 'center', alignItems: 'center', marginBottom: 8 },
+        statValue: { fontSize: 20, fontWeight: 'bold', color: colors.text },
+        statLabel: { fontSize: 12, color: colors.textSecondary },
+        editBtn: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', marginTop: 16, backgroundColor: '#a855f7', padding: 12, borderRadius: 12 },
+        editBtnText: { color: '#fff', marginLeft: 8, fontWeight: '600' },
+        form: { marginTop: 16 },
+        input: { backgroundColor: isDarkMode ? '#374151' : '#f3f4f6', borderRadius: 12, padding: 12, marginBottom: 12, color: colors.text },
+        saveBtn: { backgroundColor: '#22c55e', padding: 12, borderRadius: 12, alignItems: 'center' },
+        saveBtnText: { color: '#fff', fontWeight: 'bold' },
+        content: { padding: 24, marginTop: -80 },
+        menuItem: { backgroundColor: colors.card, borderRadius: 16, padding: 16, flexDirection: 'row', alignItems: 'center' },
+        menuItemIcon: { width: 48, height: 48, borderRadius: 12, justifyContent: 'center', alignItems: 'center', marginRight: 16 },
+        menuItemTitle: { fontSize: 16, fontWeight: '600', color: colors.text },
+        menuItemSubTitle: { color: colors.textSecondary }
+    });
+
+    // Handle Theme Selection
+    const handleThemeChange = () => {
+        Alert.alert(
+            currentLanguage === 'fr' ? 'Choisir le thème' : 'Select Theme',
+            '',
+            [
+                {
+                    text: (currentLanguage === 'fr' ? 'Clair' : 'Light') + (themeMode === 'light' ? ' ✓' : ''),
+                    onPress: () => setThemeMode('light')
+                },
+                {
+                    text: (currentLanguage === 'fr' ? 'Sombre' : 'Dark') + (themeMode === 'dark' ? ' ✓' : ''),
+                    onPress: () => setThemeMode('dark')
+                },
+                {
+                    text: (currentLanguage === 'fr' ? 'Automatique' : 'System') + (themeMode === 'system' ? ' ✓' : ''),
+                    onPress: () => setThemeMode('system')
+                },
+                { text: t('common.cancel'), style: 'cancel' }
+            ]
+        );
     };
 
     return (
@@ -168,6 +221,27 @@ export default function ProfileScreen() {
                 </LinearGradient>
 
                 <View style={styles.content}>
+
+                    {/* Theme Selector */}
+                    <TouchableOpacity
+                        style={[styles.menuItem, { marginBottom: 16 }]}
+                        onPress={handleThemeChange}
+                    >
+                        <LinearGradient colors={['#8b5cf6', '#d946ef']} style={styles.menuItemIcon}>
+                            <Ionicons name='contrast-outline' size={24} color='white' />
+                        </LinearGradient>
+                        <View style={{ flex: 1 }}>
+                            <Text style={styles.menuItemTitle}>
+                                {currentLanguage === 'fr' ? 'Thème' : 'Theme'}
+                            </Text>
+                            <Text style={styles.menuItemSubTitle}>
+                                {getThemeLabel()}
+                            </Text>
+                        </View>
+                        <Ionicons name='chevron-forward-outline' size={20} color='#9ca3af' />
+                    </TouchableOpacity>
+
+                    {/* Language Selector */}
                     <TouchableOpacity
                         style={[styles.menuItem, { marginBottom: 16 }]}
                         onPress={() => {
@@ -200,6 +274,7 @@ export default function ProfileScreen() {
                         <Ionicons name='chevron-forward-outline' size={20} color='#9ca3af' />
                     </TouchableOpacity>
 
+                    {/* Logout */}
                     <TouchableOpacity
                         style={styles.menuItem}
                         onPress={() => {
@@ -236,31 +311,3 @@ export default function ProfileScreen() {
     );
 }
 
-const styles = StyleSheet.create({
-    container: { flex: 1, backgroundColor: '#f9fafb' },
-    header: { paddingHorizontal: 24, paddingTop: 16, paddingBottom: 128, borderBottomLeftRadius: 32, borderBottomRightRadius: 32 },
-    headerTitle: { fontSize: 32, fontWeight: 'bold', color: 'white', marginBottom: 32 },
-    profileCard: { backgroundColor: 'white', borderRadius: 24, padding: 24, elevation: 4 },
-    profileHeader: { flexDirection: 'row', alignItems: 'center', marginBottom: 24, gap: 16 },
-    avatar: { width: 80, height: 80, borderRadius: 40, backgroundColor: '#faf5ff', justifyContent: 'center', alignItems: 'center' },
-    avatarEmoji: { fontSize: 40 },
-    profileInfo: { flex: 1 },
-    profileName: { fontSize: 24, fontWeight: 'bold' },
-    profileEmail: { fontSize: 14, color: '#6b7280' },
-    statsGrid: { flexDirection: 'row', gap: 12 },
-    statItem: { flex: 1, alignItems: 'center' },
-    statIcon: { width: 48, height: 48, borderRadius: 16, justifyContent: 'center', alignItems: 'center', marginBottom: 8 },
-    statValue: { fontSize: 20, fontWeight: 'bold' },
-    statLabel: { fontSize: 12, color: '#6b7280' },
-    editBtn: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', marginTop: 16, backgroundColor: '#a855f7', padding: 12, borderRadius: 12 },
-    editBtnText: { color: '#fff', marginLeft: 8, fontWeight: '600' },
-    form: { marginTop: 16 },
-    input: { backgroundColor: '#f3f4f6', borderRadius: 12, padding: 12, marginBottom: 12 },
-    saveBtn: { backgroundColor: '#22c55e', padding: 12, borderRadius: 12, alignItems: 'center' },
-    saveBtnText: { color: '#fff', fontWeight: 'bold' },
-    content: { padding: 24, marginTop: -80 },
-    menuItem: { backgroundColor: '#fff', borderRadius: 16, padding: 16, flexDirection: 'row', alignItems: 'center' },
-    menuItemIcon: { width: 48, height: 48, borderRadius: 12, justifyContent: 'center', alignItems: 'center', marginRight: 16 },
-    menuItemTitle: { fontSize: 16, fontWeight: '600' },
-    menuItemSubTitle: { color: '#6b7280' }
-});

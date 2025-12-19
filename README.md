@@ -22,7 +22,7 @@ Elle permet aux utilisateurs de créer, consulter et organiser leurs voyages, av
 - JWT Authentication
 - AsyncStorage (cache & offline)
 - Expo Image Picker / Location
-- Notifications Expo
+- Notifications Expo (aucune modification apportée j'ai garder celui du prof )
 
 ---
 
@@ -105,7 +105,7 @@ Elle permet aux utilisateurs de créer, consulter et organiser leurs voyages, av
 - Visualisation et modification du profil (nom, avatar)
 - Affichage des statistiques : photos, favoris, voyages
 - Selection de la langue (FR / EN) avec persistance (avec hook use.translation.ts et config i18n.ts + fichiers de traduction locales fr.json et en.json)
-
+- Sélection du thème (Light / Dark / System) avec persistance (avec hook useTheme.ts) automatique selon les préférences système
 ---
 
 ## 📐 Décisions techniques
@@ -141,3 +141,5 @@ Des ajustements ont été faits côté backend (`server.js`) pour assurer la com
 - **Fichier `env.ts`** : Amélioration du fallback pour une meilleure compatibilité debugging web et mobile (avec importation de la librairie Platform)
 - **Nouveau fix iOS** : Corrections spécifiques pour le fonctionnement sur iOS
 - **Fichier `server.js`** : Adaptation de la gestion des URLs et des uploads pour assurer la compatibilité iOS/Android (le backend fourni ne gérait pas correctement Android avec localhost et uploads)
+
+## Notifications aucune modification probleme de compatibilite avec expo sdk 53 donc le modifier serait risque pour la stabilite de lapp

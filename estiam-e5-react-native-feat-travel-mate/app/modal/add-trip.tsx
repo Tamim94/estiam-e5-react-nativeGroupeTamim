@@ -24,6 +24,7 @@ import DateTimePicker, {
 import Ionicons from "@expo/vector-icons/Ionicons";
 import { API } from "@/services/api";
 import { useTranslation } from "@/hooks/use-translation";
+import { useTheme } from "@/contexts/theme-contexts";
 
 interface Coordinates {
   latitude: number;
@@ -34,6 +35,7 @@ export default function AddTripModal() {
   const router = useRouter();
   const webViewRef = useRef<WebView>(null);
   const { t } = useTranslation();
+  const { colors, isDarkMode } = useTheme();
 
   const [tripTitle, setTripTitle] = useState("");
   const [destination, setDestination] = useState("");
@@ -45,11 +47,8 @@ export default function AddTripModal() {
   const [selectedImages, setSelectedImages] = useState<Array<string>>([]);
   const [coordinates, setCoordinates] = useState<Coordinates | null>(null);
 
-  // Date picker states
   const [showStartPicker, setShowStartPicker] = useState(false);
   const [showEndPicker, setShowEndPicker] = useState(false);
-
-  // Map modal state
   const [showMapModal, setShowMapModal] = useState(false);
   const [tempCoordinates, setTempCoordinates] = useState<Coordinates | null>(
     null
@@ -59,28 +58,22 @@ export default function AddTripModal() {
 
   const validateForm = () => {
     if (!tripTitle.trim()) {
-      Alert.alert(t('common.error'), t('addTrip.requiredFields'));
+      Alert.alert(t("common.error"), t("addTrip.requiredFields"));
       return false;
     }
 
     if (!DESTINATION_REGEX.test(destination)) {
-      Alert.alert(
-        t('common.error'),
-        t('addTrip.destinationPlaceholder')
-      );
+      Alert.alert(t("common.error"), t("addTrip.destinationPlaceholder"));
       return false;
     }
 
     if (!startDate || !endDate) {
-      Alert.alert(t('common.error'), t('addTrip.requiredFields'));
+      Alert.alert(t("common.error"), t("addTrip.requiredFields"));
       return false;
     }
 
     if (endDate < startDate) {
-      Alert.alert(
-        t('common.error'),
-        t('addTrip.requiredFields')
-      );
+      Alert.alert(t("common.error"), t("addTrip.requiredFields"));
       return false;
     }
 
@@ -93,14 +86,14 @@ export default function AddTripModal() {
 
   const showPermissionAlert = (title: string, message: string) => {
     Alert.alert(title, message, [
-      { text: t('common.cancel'), style: "cancel" },
-      { text: t('settings.title'), onPress: openAppSettings },
+      { text: t("common.cancel"), style: "cancel" },
+      { text: t("settings.title"), onPress: openAppSettings },
     ]);
   };
 
   const showSimulatorAlert = (feature: string) => {
     Alert.alert(
-      t('common.error'),
+      t("common.error"),
       `La fonctionnalité "${feature}" n'est pas disponible sur un simulateur.`,
       [{ text: "D'accord", style: "cancel" }]
     );
@@ -148,8 +141,8 @@ export default function AddTripModal() {
 
       if (status !== "granted") {
         showPermissionAlert(
-          t('addTrip.galleryPermissionDenied'),
-          t('addTrip.galleryPermissionDenied')
+          t("addTrip.galleryPermissionDenied"),
+          t("addTrip.galleryPermissionDenied")
         );
         return;
       }
@@ -175,8 +168,8 @@ export default function AddTripModal() {
       const { status } = await ImagePicker.requestCameraPermissionsAsync();
       if (status !== "granted") {
         showPermissionAlert(
-          t('addTrip.cameraPermissionDenied'),
-          t('addTrip.cameraPermissionDenied')
+          t("addTrip.cameraPermissionDenied"),
+          t("addTrip.cameraPermissionDenied")
         );
         return;
       }
@@ -202,8 +195,8 @@ export default function AddTripModal() {
       const { status } = await Location.requestForegroundPermissionsAsync();
       if (status !== "granted") {
         showPermissionAlert(
-          t('addTrip.locationPermissionDenied'),
-          t('addTrip.locationPermissionDenied')
+          t("addTrip.locationPermissionDenied"),
+          t("addTrip.locationPermissionDenied")
         );
         return;
       }
@@ -314,7 +307,6 @@ export default function AddTripModal() {
           }));
         });
 
-        // Initial message
         setTimeout(() => {
           const center = map.getCenter();
           window.ReactNativeWebView.postMessage(JSON.stringify({
@@ -367,14 +359,14 @@ export default function AddTripModal() {
 
       await API.createTrip(trip);
 
-      Alert.alert(t('common.success'), t('trips.addSuccess'), [
-        { text: t('common.ok'), onPress: () => router.back() },
+      Alert.alert(t("common.success"), t("trips.addSuccess"), [
+        { text: t("common.ok"), onPress: () => router.back() },
       ]);
     } catch (error: any) {
       console.error("Error creating trip:", error);
       Alert.alert(
-        t('common.error'),
-        t('trips.addError') + `: ${error.message || error}`
+        t("common.error"),
+        t("trips.addError") + `: ${error.message || error}`
       );
     } finally {
       setIsUploading(false);
@@ -382,76 +374,148 @@ export default function AddTripModal() {
   };
 
   return (
-    <SafeAreaView style={styles.container} edges={["bottom"]}>
-      <Text style={styles.pageTitle}>{t('addTrip.title')}</Text>
+    <SafeAreaView
+      style={[styles.container, { backgroundColor: colors.background }]}
+      edges={["bottom"]}
+    >
+      <Text style={[styles.pageTitle, { color: colors.text }]}>
+        {t("addTrip.title")}
+      </Text>
 
       <ScrollView showsVerticalScrollIndicator={false}>
         {/* Cover Photo */}
         <View style={styles.section}>
-          <Text style={styles.label}>{t('addTrip.addImages')}</Text>
-          <View style={styles.photoUpload}>
+          <Text style={[styles.label, { color: colors.textSecondary }]}>
+            {t("addTrip.addImages")}
+          </Text>
+          <View
+            style={[
+              styles.photoUpload,
+              {
+                backgroundColor: isDarkMode ? "#4c1d95" : "#faf5ff",
+                borderColor: isDarkMode ? "#7c3aed" : "#e9d5ff",
+              },
+            ]}
+          >
             <View style={styles.photoButtons}>
-              <TouchableOpacity style={styles.photoButton} onPress={takePhoto}>
+              <TouchableOpacity
+                style={[
+                  styles.photoButton,
+                  { backgroundColor: colors.card },
+                ]}
+                onPress={takePhoto}
+              >
                 <Ionicons name="camera" size={32} color="#a855f7" />
               </TouchableOpacity>
-              <TouchableOpacity style={styles.photoButton} onPress={pickImage}>
+              <TouchableOpacity
+                style={[
+                  styles.photoButton,
+                  { backgroundColor: colors.card },
+                ]}
+                onPress={pickImage}
+              >
                 <Ionicons name="image" size={32} color="#ec4899" />
               </TouchableOpacity>
             </View>
-            <Text style={styles.photoText}>
-              {t('addTrip.selectImages')}
+            <Text style={[styles.photoText, { color: colors.textSecondary }]}>
+              {t("addTrip.selectImages")}
             </Text>
-            <Text style={styles.photoSubText}>{t('addTrip.addImages')}</Text>
+            <Text style={[styles.photoSubText, { color: colors.textSecondary }]}>
+              {t("addTrip.addImages")}
+            </Text>
           </View>
         </View>
 
         {/* Title */}
         <View style={styles.section}>
-          <Text style={styles.label}>{t('addTrip.tripTitle')}</Text>
+          <Text style={[styles.label, { color: colors.textSecondary }]}>
+            {t("addTrip.tripTitle")}
+          </Text>
           <TextInput
-            style={styles.input}
-            placeholder={t('addTrip.tripTitlePlaceholder')}
+            style={[
+              styles.input,
+              {
+                backgroundColor: colors.card,
+                color: colors.text,
+                borderColor: colors.border,
+              },
+            ]}
+            placeholder={t("addTrip.tripTitlePlaceholder")}
             value={tripTitle}
             onChangeText={setTripTitle}
-            placeholderTextColor="#9ca3af"
+            placeholderTextColor={colors.textSecondary}
           />
         </View>
 
         {/* Destination with location */}
         <View style={styles.section}>
-          <Text style={styles.label}>{t('addTrip.destination')}</Text>
-          <View style={styles.inputWithIcon}>
-            <Ionicons name="location-outline" size={20} color="#6b7280" />
+          <Text style={[styles.label, { color: colors.textSecondary }]}>
+            {t("addTrip.destination")}
+          </Text>
+          <View
+            style={[
+              styles.inputWithIcon,
+              {
+                backgroundColor: colors.card,
+                borderColor: colors.border,
+              },
+            ]}
+          >
+            <Ionicons
+              name="location-outline"
+              size={20}
+              color={colors.textSecondary}
+            />
             <TextInput
-              style={styles.inputFlex}
-              placeholder={t('addTrip.destinationPlaceholder')}
+              style={[styles.inputFlex, { color: colors.text }]}
+              placeholder={t("addTrip.destinationPlaceholder")}
               value={destination}
               onChangeText={setDestination}
-              placeholderTextColor="#9ca3af"
+              placeholderTextColor={colors.textSecondary}
             />
           </View>
 
           <View style={styles.locationButtons}>
             <TouchableOpacity
-              style={styles.locationButton}
+              style={[
+                styles.locationButton,
+                { backgroundColor: isDarkMode ? "#4c1d95" : "#faf5ff" },
+              ]}
               onPress={getLocation}
             >
               <Ionicons name="navigate" size={18} color="#a855f7" />
-              <Text style={styles.locationButtonText}>{t('addTrip.currentLocation')}</Text>
+              <Text style={styles.locationButtonText}>
+                {t("addTrip.currentLocation")}
+              </Text>
             </TouchableOpacity>
 
             <TouchableOpacity
-              style={styles.locationButton}
+              style={[
+                styles.locationButton,
+                { backgroundColor: isDarkMode ? "#4c1d95" : "#faf5ff" },
+              ]}
               onPress={openMapPicker}
             >
               <Ionicons name="map" size={18} color="#a855f7" />
-              <Text style={styles.locationButtonText}>{t('addTrip.pickLocation')}</Text>
+              <Text style={styles.locationButtonText}>
+                {t("addTrip.pickLocation")}
+              </Text>
             </TouchableOpacity>
           </View>
 
           {coordinates && (
-            <View style={styles.coordsPreview}>
-              <Text style={styles.coordsText}>
+            <View
+              style={[
+                styles.coordsPreview,
+                { backgroundColor: isDarkMode ? "#14532d" : "#f0fdf4" },
+              ]}
+            >
+              <Text
+                style={[
+                  styles.coordsText,
+                  { color: isDarkMode ? "#86efac" : "#166534" },
+                ]}
+              >
                 📍 {coordinates.latitude.toFixed(4)},{" "}
                 {coordinates.longitude.toFixed(4)}
               </Text>
@@ -461,37 +525,59 @@ export default function AddTripModal() {
 
         {/* Start Date */}
         <View style={styles.section}>
-          <Text style={styles.label}>{t('addTrip.startDate')}</Text>
+          <Text style={[styles.label, { color: colors.textSecondary }]}>
+            {t("addTrip.startDate")}
+          </Text>
           <TouchableOpacity
-            style={styles.inputWithIcon}
+            style={[
+              styles.inputWithIcon,
+              {
+                backgroundColor: colors.card,
+                borderColor: colors.border,
+              },
+            ]}
             onPress={() => setShowStartPicker(true)}
           >
-            <Ionicons name="calendar-outline" size={20} color="#6b7280" />
+            <Ionicons
+              name="calendar-outline"
+              size={20}
+              color={colors.textSecondary}
+            />
             <Text
               style={[
                 styles.dateText,
-                !startDate && styles.dateTextPlaceholder,
+                { color: colors.text },
+                !startDate && { color: colors.textSecondary },
               ]}
             >
-              {startDate ? formatDate(startDate) : t('addTrip.selectDate')}
+              {startDate ? formatDate(startDate) : t("addTrip.selectDate")}
             </Text>
           </TouchableOpacity>
 
           {showStartPicker && (
-            <View style={styles.pickerContainer}>
+            <View
+              style={[
+                styles.pickerContainer,
+                { backgroundColor: colors.card },
+              ]}
+            >
               <DateTimePicker
                 value={startDate || new Date()}
                 mode="date"
                 display={Platform.OS === "ios" ? "spinner" : "default"}
                 onChange={onStartDateChange}
                 locale="fr-FR"
+                themeVariant={isDarkMode ? "dark" : "light"}
               />
               {Platform.OS === "ios" && (
                 <TouchableOpacity
-                  style={styles.pickerDoneButton}
+                  style={[
+                    styles.pickerDoneButton,
+                    { borderTopColor: colors.border },
+                  ]}
                   onPress={() => setShowStartPicker(false)}
                 >
-                  <Text style={styles.pickerDoneText}>{t('common.ok')}</Text>
+                  <Text style={styles.pickerDoneText}>{t("common.ok")}</Text>
                 </TouchableOpacity>
               )}
             </View>
@@ -500,21 +586,42 @@ export default function AddTripModal() {
 
         {/* End Date */}
         <View style={styles.section}>
-          <Text style={styles.label}>{t('addTrip.endDate')}</Text>
+          <Text style={[styles.label, { color: colors.textSecondary }]}>
+            {t("addTrip.endDate")}
+          </Text>
           <TouchableOpacity
-            style={styles.inputWithIcon}
+            style={[
+              styles.inputWithIcon,
+              {
+                backgroundColor: colors.card,
+                borderColor: colors.border,
+              },
+            ]}
             onPress={() => setShowEndPicker(true)}
           >
-            <Ionicons name="calendar-outline" size={20} color="#6b7280" />
+            <Ionicons
+              name="calendar-outline"
+              size={20}
+              color={colors.textSecondary}
+            />
             <Text
-              style={[styles.dateText, !endDate && styles.dateTextPlaceholder]}
+              style={[
+                styles.dateText,
+                { color: colors.text },
+                !endDate && { color: colors.textSecondary },
+              ]}
             >
-              {endDate ? formatDate(endDate) : t('addTrip.selectDate')}
+              {endDate ? formatDate(endDate) : t("addTrip.selectDate")}
             </Text>
           </TouchableOpacity>
 
           {showEndPicker && (
-            <View style={styles.pickerContainer}>
+            <View
+              style={[
+                styles.pickerContainer,
+                { backgroundColor: colors.card },
+              ]}
+            >
               <DateTimePicker
                 value={endDate || new Date()}
                 mode="date"
@@ -522,13 +629,17 @@ export default function AddTripModal() {
                 onChange={onEndDateChange}
                 minimumDate={startDate || undefined}
                 locale="fr-FR"
+                themeVariant={isDarkMode ? "dark" : "light"}
               />
               {Platform.OS === "ios" && (
                 <TouchableOpacity
-                  style={styles.pickerDoneButton}
+                  style={[
+                    styles.pickerDoneButton,
+                    { borderTopColor: colors.border },
+                  ]}
                   onPress={() => setShowEndPicker(false)}
                 >
-                  <Text style={styles.pickerDoneText}>{t('common.ok')}</Text>
+                  <Text style={styles.pickerDoneText}>{t("common.ok")}</Text>
                 </TouchableOpacity>
               )}
             </View>
@@ -537,31 +648,44 @@ export default function AddTripModal() {
 
         {/* Description */}
         <View style={styles.section}>
-          <Text style={styles.label}>{t('addTrip.description')}</Text>
+          <Text style={[styles.label, { color: colors.textSecondary }]}>
+            {t("addTrip.description")}
+          </Text>
           <TextInput
-            style={[styles.input, styles.textArea]}
-            placeholder={t('addTrip.descriptionPlaceholder')}
+            style={[
+              styles.input,
+              styles.textArea,
+              {
+                backgroundColor: colors.card,
+                color: colors.text,
+                borderColor: colors.border,
+              },
+            ]}
+            placeholder={t("addTrip.descriptionPlaceholder")}
             value={description}
             onChangeText={setDescription}
             multiline
             numberOfLines={4}
             textAlignVertical="top"
-            placeholderTextColor="#9ca3af"
+            placeholderTextColor={colors.textSecondary}
           />
         </View>
 
         {/* Photos Preview */}
         {selectedImages.length > 0 && (
           <View style={styles.section}>
-            <Text style={styles.label}>
-              {t('addTrip.selectImages')} ({selectedImages.length})
+            <Text style={[styles.label, { color: colors.textSecondary }]}>
+              {t("addTrip.selectImages")} ({selectedImages.length})
             </Text>
             <ScrollView horizontal showsHorizontalScrollIndicator={false}>
               {selectedImages.map((uri, index) => (
                 <View key={index} style={styles.imagePreview}>
                   <Image source={{ uri }} style={styles.previewImage} />
                   <TouchableOpacity
-                    style={styles.removeButton}
+                    style={[
+                      styles.removeButton,
+                      { backgroundColor: colors.background },
+                    ]}
                     onPress={() =>
                       setSelectedImages((prev) =>
                         prev.filter((_, i) => i !== index)
@@ -578,17 +702,31 @@ export default function AddTripModal() {
 
         {/* Upload Progress */}
         {isUploading && (
-          <View style={styles.progressCard}>
+          <View
+            style={[
+              styles.progressCard,
+              { backgroundColor: isDarkMode ? "#4c1d95" : "#faf5ff" },
+            ]}
+          >
             <View style={styles.progressHeader}>
               <View style={styles.progressInfo}>
-                <Ionicons name="cloud-upload-outline" size={24} color="#a855f7" />
-                <Text style={styles.progressText}>
-                  {t('addTrip.uploadingImages')}
+                <Ionicons
+                  name="cloud-upload-outline"
+                  size={24}
+                  color="#a855f7"
+                />
+                <Text style={[styles.progressText, { color: colors.text }]}>
+                  {t("addTrip.uploadingImages")}
                 </Text>
               </View>
               <Text style={styles.progressPercent}>{uploadProgress}%</Text>
             </View>
-            <View style={styles.progressBarBg}>
+            <View
+              style={[
+                styles.progressBarBg,
+                { backgroundColor: isDarkMode ? "#7c3aed" : "#e9d5ff" },
+              ]}
+            >
               <LinearGradient
                 colors={["#a855f7", "#ec4899"]}
                 style={[styles.progressBarFill, { width: `${uploadProgress}%` }]}
@@ -612,7 +750,7 @@ export default function AddTripModal() {
             end={{ x: 1, y: 0 }}
           >
             <Text style={styles.saveButtonText}>
-              {isUploading ? t('addTrip.saving') : t('addTrip.save')}
+              {isUploading ? t("addTrip.saving") : t("addTrip.save")}
             </Text>
           </LinearGradient>
         </TouchableOpacity>
@@ -626,14 +764,28 @@ export default function AddTripModal() {
         animationType="slide"
         presentationStyle="pageSheet"
       >
-        <SafeAreaView style={styles.mapModalContainer}>
-          <View style={styles.mapHeader}>
+        <SafeAreaView
+          style={[styles.mapModalContainer, { backgroundColor: colors.background }]}
+        >
+          <View
+            style={[
+              styles.mapHeader,
+              {
+                backgroundColor: colors.card,
+                borderBottomColor: colors.border,
+              },
+            ]}
+          >
             <TouchableOpacity onPress={() => setShowMapModal(false)}>
-              <Text style={styles.mapCancelText}>{t('common.cancel')}</Text>
+              <Text style={[styles.mapCancelText, { color: colors.textSecondary }]}>
+                {t("common.cancel")}
+              </Text>
             </TouchableOpacity>
-            <Text style={styles.mapTitle}>{t('addTrip.pickLocation')}</Text>
+            <Text style={[styles.mapTitle, { color: colors.text }]}>
+              {t("addTrip.pickLocation")}
+            </Text>
             <TouchableOpacity onPress={confirmMapLocation}>
-              <Text style={styles.mapConfirmText}>{t('common.confirm')}</Text>
+              <Text style={styles.mapConfirmText}>{t("common.confirm")}</Text>
             </TouchableOpacity>
           </View>
 
@@ -650,8 +802,10 @@ export default function AddTripModal() {
             javaScriptEnabled
           />
 
-          <View style={styles.mapFooter}>
-            <Text style={styles.mapHint}>
+          <View
+            style={[styles.mapFooter, { backgroundColor: colors.card }]}
+          >
+            <Text style={[styles.mapHint, { color: colors.textSecondary }]}>
               Déplacez la carte pour positionner le marqueur
             </Text>
             {tempCoordinates && (
@@ -671,7 +825,6 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     padding: 20,
-    backgroundColor: "#fff",
   },
   pageTitle: {
     fontSize: 24,
@@ -683,18 +836,15 @@ const styles = StyleSheet.create({
   },
   label: {
     fontSize: 14,
-    color: "#6b7280",
     marginBottom: 8,
     fontWeight: "600",
   },
   photoUpload: {
-    backgroundColor: "#faf5ff",
     borderRadius: 24,
     justifyContent: "center",
     alignItems: "center",
     borderWidth: 2,
     borderStyle: "dashed",
-    borderColor: "#e9d5ff",
     paddingBottom: 16,
   },
   photoButtons: {
@@ -707,7 +857,6 @@ const styles = StyleSheet.create({
     width: 64,
     height: 64,
     borderRadius: 16,
-    backgroundColor: "#fff",
     justifyContent: "center",
     alignItems: "center",
     shadowColor: "#000",
@@ -718,38 +867,30 @@ const styles = StyleSheet.create({
   },
   photoText: {
     fontSize: 14,
-    color: "#6b7280",
   },
   photoSubText: {
     fontSize: 12,
-    color: "#9ca3af",
     marginTop: 4,
   },
   input: {
-    backgroundColor: "#f9fafb",
     borderRadius: 16,
     paddingHorizontal: 16,
     paddingVertical: 14,
     fontSize: 16,
-    color: "#111827",
-    borderWidth: 2,
-    borderColor: "transparent",
+    borderWidth: 1,
   },
   inputWithIcon: {
     flexDirection: "row",
     alignItems: "center",
-    backgroundColor: "#f9fafb",
     borderRadius: 16,
     paddingHorizontal: 16,
     paddingVertical: 14,
-    borderWidth: 2,
-    borderColor: "transparent",
+    borderWidth: 1,
     gap: 12,
   },
   inputFlex: {
     flex: 1,
     fontSize: 16,
-    color: "#111827",
   },
   locationButtons: {
     flexDirection: "row",
@@ -760,7 +901,6 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     gap: 6,
-    backgroundColor: "#faf5ff",
     paddingHorizontal: 14,
     paddingVertical: 10,
     borderRadius: 12,
@@ -772,24 +912,17 @@ const styles = StyleSheet.create({
   },
   coordsPreview: {
     marginTop: 12,
-    backgroundColor: "#f0fdf4",
     padding: 12,
     borderRadius: 12,
   },
   coordsText: {
-    color: "#166534",
     fontSize: 13,
   },
   dateText: {
     flex: 1,
     fontSize: 16,
-    color: "#111827",
-  },
-  dateTextPlaceholder: {
-    color: "#9ca3af",
   },
   pickerContainer: {
-    backgroundColor: "#f9fafb",
     borderRadius: 16,
     marginTop: 8,
     overflow: "hidden",
@@ -798,7 +931,6 @@ const styles = StyleSheet.create({
     alignItems: "center",
     padding: 12,
     borderTopWidth: 1,
-    borderTopColor: "#e5e7eb",
   },
   pickerDoneText: {
     color: "#a855f7",
@@ -822,11 +954,9 @@ const styles = StyleSheet.create({
     position: "absolute",
     top: -8,
     right: -8,
-    backgroundColor: "white",
     borderRadius: 12,
   },
   progressCard: {
-    backgroundColor: "#faf5ff",
     borderRadius: 16,
     padding: 16,
     marginBottom: 24,
@@ -844,7 +974,6 @@ const styles = StyleSheet.create({
   },
   progressText: {
     fontSize: 14,
-    color: "#111827",
   },
   progressPercent: {
     fontSize: 14,
@@ -853,7 +982,6 @@ const styles = StyleSheet.create({
   },
   progressBarBg: {
     height: 8,
-    backgroundColor: "#e9d5ff",
     borderRadius: 4,
     overflow: "hidden",
   },
@@ -873,10 +1001,8 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: "600",
   },
-  // Map Modal Styles
   mapModalContainer: {
     flex: 1,
-    backgroundColor: "#fff",
   },
   mapHeader: {
     flexDirection: "row",
@@ -884,16 +1010,13 @@ const styles = StyleSheet.create({
     alignItems: "center",
     padding: 16,
     borderBottomWidth: 1,
-    borderBottomColor: "#e5e7eb",
   },
   mapCancelText: {
-    color: "#6b7280",
     fontSize: 16,
   },
   mapTitle: {
     fontSize: 17,
     fontWeight: "600",
-    color: "#111827",
   },
   mapConfirmText: {
     color: "#a855f7",
@@ -905,12 +1028,10 @@ const styles = StyleSheet.create({
   },
   mapFooter: {
     padding: 16,
-    backgroundColor: "#f9fafb",
     alignItems: "center",
     gap: 4,
   },
   mapHint: {
-    color: "#6b7280",
     fontSize: 14,
   },
   mapCoords: {

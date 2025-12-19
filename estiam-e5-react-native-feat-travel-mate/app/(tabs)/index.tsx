@@ -15,6 +15,7 @@ import { useRouter } from 'expo-router';
 import { API, Trip } from '@/services/api';
 import IMAGES_SOURCES from './trips';
 import { useTranslation } from '@/hooks/use-translation';
+import { useTheme } from '@/contexts/theme-contexts';
 
 // Keep colors for consistency
 const PURPLE = '#a855f7';
@@ -25,6 +26,7 @@ const BG = '#f9fafb';
 export default function HomeScreen() {
   const router = useRouter();
   const { t } = useTranslation();
+  const { colors, isDarkMode } = useTheme();
   const [trips, setTrips] = useState<Trip[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -77,6 +79,201 @@ export default function HomeScreen() {
       colors: ['#ef4444', '#f43f5e'] as const,
     },
   ];
+
+  const styles = StyleSheet.create({
+    container: {
+      flex: 1,
+      backgroundColor: colors.background,
+    },
+    /* Header Styles */
+    header: {
+      paddingHorizontal: 24,
+      paddingTop: 20,
+      paddingBottom: 100, // Large padding for overlap
+      borderBottomLeftRadius: 32,
+      borderBottomRightRadius: 32,
+    },
+    headerContent: {
+      flexDirection: 'row',
+      justifyContent: 'space-between',
+      alignItems: 'center',
+    },
+    headerSubtitle: {
+      color: 'rgba(255,255,255,0.8)',
+      fontSize: 16,
+      fontWeight: '500',
+      marginBottom: 4,
+    },
+    headerTitle: {
+      fontSize: 34,
+      fontWeight: 'bold',
+      color: 'white',
+    },
+
+    /* Main Content Overlay */
+    contentContainer: {
+      marginTop: -70, // Overlaps the header
+      paddingHorizontal: 24,
+    },
+
+    /* Stats Card */
+    statsCard: {
+      backgroundColor: colors.card,
+      borderRadius: 24,
+      padding: 24,
+      shadowColor: '#000',
+      shadowOffset: { width: 0, height: 8 },
+      shadowOpacity: 0.1,
+      shadowRadius: 24,
+      elevation: 8,
+      marginBottom: 32,
+    },
+    statsGrid: {
+      flexDirection: 'row',
+      justifyContent: 'space-between',
+    },
+    statItem: {
+      alignItems: 'center',
+      flex: 1,
+    },
+    statIcon: {
+      width: 48,
+      height: 48,
+      borderRadius: 16,
+      justifyContent: 'center',
+      alignItems: 'center',
+      marginBottom: 12,
+    },
+    statValue: {
+      fontSize: 20,
+      fontWeight: 'bold',
+      color: colors.text,
+      marginBottom: 2,
+    },
+    statLabel: {
+      fontSize: 12,
+      color: colors.textSecondary,
+      fontWeight: '500',
+    },
+
+    /* Sections */
+    section: {
+      marginBottom: 28,
+    },
+    sectionHeader: {
+      flexDirection: 'row',
+      justifyContent: 'space-between',
+      alignItems: 'center',
+      marginBottom: 16,
+    },
+    sectionTitle: {
+      fontSize: 20,
+      fontWeight: 'bold',
+      color: colors.text,
+    },
+    link: {
+      color: PURPLE,
+      fontWeight: '600',
+      fontSize: 14,
+    },
+    empty: {
+      color: colors.textSecondary,
+      fontStyle: 'italic',
+    },
+
+    /* Trip Cards */
+    tripCard: {
+      width: 280,
+      height: 180,
+      borderRadius: 24,
+      marginRight: 16,
+      backgroundColor: isDarkMode ? colors.card : '#f3f4f6',
+      overflow: 'hidden',
+      shadowColor: '#000',
+      shadowOffset: { width: 0, height: 4 },
+      shadowOpacity: 0.1,
+      shadowRadius: 12,
+      elevation: 5,
+    },
+    tripImage: {
+      width: '100%',
+      height: '100%',
+    },
+    overlay: {
+      position: 'absolute',
+      left: 0,
+      right: 0,
+      bottom: 0,
+      height: '60%',
+    },
+    favoriteBadge: {
+      position: 'absolute',
+      top: 12,
+      right: 12,
+      backgroundColor: 'rgba(236, 72, 153, 0.9)', // Pink with opacity
+      padding: 8,
+      borderRadius: 50,
+      backdropFilter: 'blur(4px)',
+    },
+    tripContent: {
+      position: 'absolute',
+      bottom: 16,
+      left: 16,
+      right: 16,
+    },
+    tripTitle: {
+      color: 'white',
+      fontSize: 18,
+      fontWeight: 'bold',
+      marginBottom: 4,
+    },
+    tripMetaRow: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 4,
+    },
+    tripDestination: {
+      color: 'rgba(255,255,255,0.9)',
+      fontSize: 14,
+      fontWeight: '500',
+    },
+
+    /* Quick Action Items (Styled like Profile Menu) */
+    actionItem: {
+      backgroundColor: colors.card,
+      borderRadius: 16,
+      padding: 16,
+      flexDirection: 'row',
+      alignItems: 'center',
+      marginBottom: 12,
+      shadowColor: '#000',
+      shadowOffset: { width: 0, height: 2 },
+      shadowOpacity: 0.05,
+      shadowRadius: 8,
+      elevation: 2,
+    },
+    actionIconBox: {
+      width: 48,
+      height: 48,
+      borderRadius: 12,
+      justifyContent: 'center',
+      alignItems: 'center',
+      marginRight: 16,
+    },
+    actionInfo: {
+      flex: 1,
+    },
+    actionTitle: {
+      fontSize: 16,
+      fontWeight: '600',
+      color: colors.text,
+      marginBottom: 2,
+    },
+    actionSubtitle: {
+      fontSize: 13,
+      color: colors.textSecondary,
+    },
+  });
 
   return (
     <SafeAreaView style={styles.container} edges={['top']}>
@@ -227,198 +424,3 @@ export default function HomeScreen() {
     </SafeAreaView>
   );
 }
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: BG,
-  },
-  /* Header Styles */
-  header: {
-    paddingHorizontal: 24,
-    paddingTop: 20,
-    paddingBottom: 100, // Large padding for overlap
-    borderBottomLeftRadius: 32,
-    borderBottomRightRadius: 32,
-  },
-  headerContent: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-  },
-  headerSubtitle: {
-    color: 'rgba(255,255,255,0.8)',
-    fontSize: 16,
-    fontWeight: '500',
-    marginBottom: 4,
-  },
-  headerTitle: {
-    fontSize: 34,
-    fontWeight: 'bold',
-    color: 'white',
-  },
-
-  /* Main Content Overlay */
-  contentContainer: {
-    marginTop: -70, // Overlaps the header
-    paddingHorizontal: 24,
-  },
-
-  /* Stats Card */
-  statsCard: {
-    backgroundColor: 'white',
-    borderRadius: 24,
-    padding: 24,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 8 },
-    shadowOpacity: 0.1,
-    shadowRadius: 24,
-    elevation: 8,
-    marginBottom: 32,
-  },
-  statsGrid: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-  },
-  statItem: {
-    alignItems: 'center',
-    flex: 1,
-  },
-  statIcon: {
-    width: 48,
-    height: 48,
-    borderRadius: 16,
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginBottom: 12,
-  },
-  statValue: {
-    fontSize: 20,
-    fontWeight: 'bold',
-    color: '#111827',
-    marginBottom: 2,
-  },
-  statLabel: {
-    fontSize: 12,
-    color: GRAY,
-    fontWeight: '500',
-  },
-
-  /* Sections */
-  section: {
-    marginBottom: 28,
-  },
-  sectionHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: 16,
-  },
-  sectionTitle: {
-    fontSize: 20,
-    fontWeight: 'bold',
-    color: '#111827',
-  },
-  link: {
-    color: PURPLE,
-    fontWeight: '600',
-    fontSize: 14,
-  },
-  empty: {
-    color: GRAY,
-    fontStyle: 'italic',
-  },
-
-  /* Trip Cards */
-  tripCard: {
-    width: 280,
-    height: 180,
-    borderRadius: 24,
-    marginRight: 16,
-    backgroundColor: '#f3f4f6',
-    overflow: 'hidden',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.1,
-    shadowRadius: 12,
-    elevation: 5,
-  },
-  tripImage: {
-    width: '100%',
-    height: '100%',
-  },
-  overlay: {
-    position: 'absolute',
-    left: 0,
-    right: 0,
-    bottom: 0,
-    height: '60%',
-  },
-  favoriteBadge: {
-    position: 'absolute',
-    top: 12,
-    right: 12,
-    backgroundColor: 'rgba(236, 72, 153, 0.9)', // Pink with opacity
-    padding: 8,
-    borderRadius: 50,
-    backdropFilter: 'blur(4px)',
-  },
-  tripContent: {
-    position: 'absolute',
-    bottom: 16,
-    left: 16,
-    right: 16,
-  },
-  tripTitle: {
-    color: 'white',
-    fontSize: 18,
-    fontWeight: 'bold',
-    marginBottom: 4,
-  },
-  tripMetaRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 4,
-  },
-  tripDestination: {
-    color: 'rgba(255,255,255,0.9)',
-    fontSize: 14,
-    fontWeight: '500',
-  },
-
-  /* Quick Action Items (Styled like Profile Menu) */
-  actionItem: {
-    backgroundColor: 'white',
-    borderRadius: 16,
-    padding: 16,
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginBottom: 12,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.05,
-    shadowRadius: 8,
-    elevation: 2,
-  },
-  actionIconBox: {
-    width: 48,
-    height: 48,
-    borderRadius: 12,
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginRight: 16,
-  },
-  actionInfo: {
-    flex: 1,
-  },
-  actionTitle: {
-    fontSize: 16,
-    fontWeight: '600',
-    color: '#111827',
-    marginBottom: 2,
-  },
-  actionSubtitle: {
-    fontSize: 13,
-    color: GRAY,
-  },
-});

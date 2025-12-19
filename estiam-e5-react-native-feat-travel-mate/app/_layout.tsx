@@ -4,91 +4,89 @@ import { StatusBar } from 'expo-status-bar';
 import 'react-native-reanimated';
 import '../config/i18n';
 
-import { useColorScheme } from '@/hooks/use-color-scheme';
 import { useOffline } from '@/hooks/use-offline';
 import { useEffect } from 'react';
 import Ionicons from '@expo/vector-icons/Ionicons';
 import { StyleSheet, TouchableOpacity, Text, View } from 'react-native';
 import { useAuth, AuthProvider } from '@/contexts/auth-context';
+// Import the Custom Theme Provider and Hook
+import { ThemeProviderCustom, useTheme } from '@/contexts/theme-contexts';
 
 export const unstable_settings = {
   anchor: '(tabs)',
 };
 
 function RootLayoutContent() {
-  const colorScheme = useColorScheme();
-  const { isOnline, pendingCount, isSyncing, syncNow } = useOffline();
+  // Use our custom hook instead of the raw useColorScheme
+  const { isDarkMode } = useTheme();
+
+  const { isOnline, pendingCount, isSyncing } = useOffline();
   const { isAuthenticated, isLoading, refreshAuth } = useAuth();
   const segments = useSegments();
   const router = useRouter();
 
-
   // check auth
   useEffect(() => {
-    if (isLoading) {
-      return;
-    }
+    if (isLoading) return;
+
     const inAuthGroup = segments[0] === '(tabs)' || segments[0] === 'modal';
     const isLoginpage = segments[0] === 'login';
+
     if (!isAuthenticated && inAuthGroup) {
       return router.replace('/login');
     } else if (isAuthenticated && isLoginpage) {
       return router.replace('/(tabs)');
-
-    } else {
-      console.log('✅ [ROUTER] Route access granted');
-
     }
-
   }, [segments, isLoading, isAuthenticated, router])
 
-
-    useEffect(() => {
-      if (segments[0] === '(tabs)' && ! isLoading && !isAuthenticated) {
-        refreshAuth();
-      }
+  useEffect(() => {
+    if (segments[0] === '(tabs)' && !isLoading && !isAuthenticated) {
+      refreshAuth();
+    }
   }, [segments, isLoading, isAuthenticated, router])
 
   return (
-    <ThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
-      {/*Banner Offline*/}
-      {!isOnline && (
-        <View style={styles.offlineBanner}>
-          <Ionicons name='cloud-offline-outline' size={16} color='#fff' />
-          <Text style={styles.bannerText}>
-            Hors ligne {pendingCount > 0 && `• ${pendingCount} en attente`}
-          </Text>
-        </View>
-      )}
+      // Apply the navigation theme based on our calculated isDarkMode
+      <ThemeProvider value={isDarkMode ? DarkTheme : DefaultTheme}>
 
-      {/*Banner Sync */}
+        {/*Banner Offline*/}
+        {!isOnline && (
+            <View style={styles.offlineBanner}>
+              <Ionicons name='cloud-offline-outline' size={16} color='#fff' />
+              <Text style={styles.bannerText}>
+                Hors ligne {pendingCount > 0 && `• ${pendingCount} en attente`}
+              </Text>
+            </View>
+        )}
 
-      {isOnline && pendingCount > 0 && (
-        <TouchableOpacity>
-          <Ionicons
-            name={isSyncing ? "sync" : "sync-outline"}
-            size={16}
-            color="#fff"
-          />E
-          <Text style={styles.bannerText}>
-            {isSyncing
-              ? 'Synchronisation...'
-              : `Synchroniser ${pendingCount} action(s)`}
-          </Text>
-        </TouchableOpacity>
-      )}
+        {/*Banner Sync */}
+        {isOnline && pendingCount > 0 && (
+            <TouchableOpacity>
+              <View style={styles.syncBanner}>
+                <Ionicons
+                    name={isSyncing ? "sync" : "sync-outline"}
+                    size={16}
+                    color="#fff"
+                />
+                <Text style={styles.bannerText}>
+                  {isSyncing
+                      ? 'Synchronisation...'
+                      : `Synchroniser ${pendingCount} action(s)`}
+                </Text>
+              </View>
+            </TouchableOpacity>
+        )}
 
-      <Stack>
-        <Stack.Screen name="login" options={{ headerShown: false }} />
-        <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
-        <Stack.Screen name="modal" options={{ presentation: 'modal', title: 'Modal' }} />
-      </Stack>
-      <StatusBar style="auto" />
-    </ThemeProvider>
+        <Stack>
+          <Stack.Screen name="login" options={{ headerShown: false }} />
+          <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
+          <Stack.Screen name="modal" options={{ presentation: 'modal', title: 'Modal' }} />
+        </Stack>
+        {/* Update Status Bar style based on theme */}
+        <StatusBar style={isDarkMode ? "light" : "dark"} />
+      </ThemeProvider>
   );
 }
-
-
 
 const styles = StyleSheet.create({
   offlineBanner: {
@@ -116,12 +114,13 @@ const styles = StyleSheet.create({
   }
 });
 
-
 export default function RootLayout() {
   return (
-    <AuthProvider>
-        <RootLayoutContent />
-    </AuthProvider>
+      <AuthProvider>
+        {/* Wrap everything in ThemeProviderCustom */}
+        <ThemeProviderCustom>
+          <RootLayoutContent />
+        </ThemeProviderCustom>
+      </AuthProvider>
   );
-  
 }
