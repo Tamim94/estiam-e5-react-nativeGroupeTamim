@@ -2,6 +2,7 @@ import { DarkTheme, DefaultTheme, ThemeProvider } from '@react-navigation/native
 import { Stack, useRouter, useSegments } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import 'react-native-reanimated';
+import '../config/i18n';
 
 import { useColorScheme } from '@/hooks/use-color-scheme';
 import { useOffline } from '@/hooks/use-offline';

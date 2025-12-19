@@ -192,5 +192,21 @@
       "lat": 0,
       "lng": 0
     }
+  },
+  {
+    "id": "c573e733-0e8d-402d-90a1-e510c25c9923",
+    "title": "fdffdfd",
+    "destination": "Japan, Tokyo",
+    "startDate": "2025-12-19",
+    "endDate": "2025-12-30",
+    "image": "http://10.0.2.2:4000/uploads/1766155816556-da5c8689-c8bf-4de4-8257-eec2c41cf1bb.jpeg",
+    "description": "asdfgfsgf",
+    "photos": [
+      "http://10.0.2.2:4000/uploads/1766155816556-da5c8689-c8bf-4de4-8257-eec2c41cf1bb.jpeg"
+    ],
+    "location": {
+      "lat": 48.869760063012365,
+      "lng": 2.416477203369141
+    }
   }
 ]

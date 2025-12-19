@@ -13,12 +13,14 @@ import {
 } from 'react-native';
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useState, useCallback } from 'react';
-import { useFocusEffect } from '@react-navigation/native'; // <--- Import this
-import { API, Trip } from '@/services/api'; // <--- Import API
+import { useFocusEffect } from '@react-navigation/native';
+import { API, Trip } from '@/services/api';
+import { useTranslation } from '@/hooks/use-translation';
 
 export default function ProfileScreen() {
     const router = useRouter();
     const { logout } = useAuth();
+    const { t, switchLanguage, currentLanguage } = useTranslation();
 
     const [isEditing, setIsEditing] = useState(false);
     const [firstName, setFirstName] = useState('Odilon');
@@ -75,7 +77,7 @@ export default function ProfileScreen() {
     // Use the state variables in your stats array
     const stats = [
         {
-            label: 'Voyages',
+            label: t('trips.title'),
             value: counts.trips.toString(),
             icon: 'map-outline',
             colors: ['#a855f7', '#ec4899'] as const
@@ -87,7 +89,7 @@ export default function ProfileScreen() {
             colors: ['#3b82f6', '#06b6d4'] as const
         },
         {
-            label: 'Favoris',
+            label: t('favorites.title'),
             value: counts.favorites.toString(),
             icon: 'heart-outline',
             colors: ['#ef4444', '#f43f5e'] as const
@@ -96,14 +98,14 @@ export default function ProfileScreen() {
 
     const handleSave = () => {
         setIsEditing(false);
-        Alert.alert('Profil mis à jour ✅');
+        Alert.alert(t('common.success'));
     };
 
     return (
         <SafeAreaView style={styles.container} edges={['top']}>
             <ScrollView showsVerticalScrollIndicator={false}>
                 <LinearGradient colors={['#a855f7', '#ec4899']} style={styles.header}>
-                    <Text style={styles.headerTitle}>Profil</Text>
+                    <Text style={styles.headerTitle}>{t('profile.title')}</Text>
 
                     <View style={styles.profileCard}>
                         <View style={styles.profileHeader}>
@@ -133,19 +135,19 @@ export default function ProfileScreen() {
                             onPress={() => setIsEditing(!isEditing)}
                         >
                             <Ionicons name="create-outline" size={20} color="#fff" />
-                            <Text style={styles.editBtnText}>Modifier le profil</Text>
+                            <Text style={styles.editBtnText}>{t('profile.editProfile')}</Text>
                         </TouchableOpacity>
 
                         {isEditing && (
                             <View style={styles.form}>
                                 <TextInput
-                                    placeholder="Prénom"
+                                    placeholder={currentLanguage === 'fr' ? "Prénom" : "First Name"}
                                     value={firstName}
                                     onChangeText={setFirstName}
                                     style={styles.input}
                                 />
                                 <TextInput
-                                    placeholder="Nom"
+                                    placeholder={currentLanguage === 'fr' ? "Nom" : "Last Name"}
                                     value={lastName}
                                     onChangeText={setLastName}
                                     style={styles.input}
@@ -158,7 +160,7 @@ export default function ProfileScreen() {
                                 />
 
                                 <TouchableOpacity style={styles.saveBtn} onPress={handleSave}>
-                                    <Text style={styles.saveBtnText}>Enregistrer</Text>
+                                    <Text style={styles.saveBtnText}>{t('common.save')}</Text>
                                 </TouchableOpacity>
                             </View>
                         )}
@@ -167,15 +169,47 @@ export default function ProfileScreen() {
 
                 <View style={styles.content}>
                     <TouchableOpacity
+                        style={[styles.menuItem, { marginBottom: 16 }]}
+                        onPress={() => {
+                            Alert.alert(
+                                t('settings.selectLanguage'),
+                                '',
+                                [
+                                    {
+                                        text: t('settings.french') + (currentLanguage === 'fr' ? ' ✓' : ''),
+                                        onPress: () => switchLanguage('fr')
+                                    },
+                                    {
+                                        text: t('settings.english') + (currentLanguage === 'en' ? ' ✓' : ''),
+                                        onPress: () => switchLanguage('en')
+                                    },
+                                    { text: t('common.cancel'), style: 'cancel' }
+                                ]
+                            );
+                        }}
+                    >
+                        <LinearGradient colors={['#3b82f6', '#06b6d4']} style={styles.menuItemIcon}>
+                            <Ionicons name='language-outline' size={24} color='white' />
+                        </LinearGradient>
+                        <View style={{ flex: 1 }}>
+                            <Text style={styles.menuItemTitle}>{t('profile.language')}</Text>
+                            <Text style={styles.menuItemSubTitle}>
+                                {currentLanguage === 'fr' ? t('settings.french') : t('settings.english')}
+                            </Text>
+                        </View>
+                        <Ionicons name='chevron-forward-outline' size={20} color='#9ca3af' />
+                    </TouchableOpacity>
+
+                    <TouchableOpacity
                         style={styles.menuItem}
                         onPress={() => {
                             Alert.alert(
-                                'Déconnexion',
-                                'Êtes-vous sûr ?',
+                                t('auth.logout'),
+                                currentLanguage === 'fr' ? 'Êtes-vous sûr ?' : 'Are you sure?',
                                 [
-                                    { text: 'Annuler', style: 'cancel' },
+                                    { text: t('common.cancel'), style: 'cancel' },
                                     {
-                                        text: 'Déconnexion',
+                                        text: t('auth.logout'),
                                         style: 'destructive',
                                         onPress: async () => {
                                             await logout();
@@ -190,8 +224,10 @@ export default function ProfileScreen() {
                             <Ionicons name='log-out-outline' size={24} color='white' />
                         </LinearGradient>
                         <View>
-                            <Text style={styles.menuItemTitle}>Déconnexion</Text>
-                            <Text style={styles.menuItemSubTitle}>Se déconnecter</Text>
+                            <Text style={styles.menuItemTitle}>{t('auth.logout')}</Text>
+                            <Text style={styles.menuItemSubTitle}>
+                                {currentLanguage === 'fr' ? 'Se déconnecter' : 'Sign out'}
+                            </Text>
                         </View>
                     </TouchableOpacity>
                 </View>

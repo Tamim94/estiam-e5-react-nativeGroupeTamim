@@ -5,10 +5,12 @@ import { useRouter } from "expo-router";
 import { useState } from "react";
 import { Alert, KeyboardAvoidingView, Platform, StyleSheet, Text, TextInput, TouchableOpacity, View, ScrollView } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
+import { useTranslation } from "@/hooks/use-translation";
 
 export default function LoginScreen() {
     const router = useRouter();
     const { login, register, isLoading, refreshAuth } = useAuth();
+    const { t } = useTranslation();
 
     const [isLoginMode, setIsLoginMode] = useState(true);
     const [email, setEmail] = useState('');
@@ -19,12 +21,12 @@ export default function LoginScreen() {
     const handleSubmit = async () => {
 
         if (!email || !password) {
-            Alert.alert('Erreur', 'Veuillez remplir tous les champs');
+            Alert.alert(t('common.error'), t('addTrip.requiredFields'));
             return;
         }
 
         if (!isLoginMode && !name) {
-            Alert.alert('Erreur', 'Veuillez entrer votre nom');
+            Alert.alert(t('common.error'), t('addTrip.requiredFields'));
             return;
         }
 
@@ -49,9 +51,9 @@ export default function LoginScreen() {
         } catch (error) {
             const errorMessage = error instanceof Error
                 ? error.message
-                : 'Une erreur est survenue';
+                : t('errors.generic');
 
-            Alert.alert('Erreur', errorMessage, [{ text: 'OK' }])
+            Alert.alert(t('common.error'), errorMessage, [{ text: t('common.ok') }])
         }
     };
 
@@ -80,8 +82,8 @@ export default function LoginScreen() {
                         </TouchableOpacity>
                         <Text style={styles.headerTitle}>
                             {isLoginMode
-                                ? 'Connectez-vous à votre compte'
-                                : 'Créez un nouveau compte'
+                                ? t('auth.login')
+                                : t('auth.register')
                             }
                         </Text>
                     </LinearGradient>
@@ -92,7 +94,7 @@ export default function LoginScreen() {
                                     <Ionicons name="person-outline" size={24} color="#6b7280" style={styles.inputIcon} />
                                     <TextInput
                                         style={styles.input}
-                                        placeholder="Nom complet"
+                                        placeholder={t('common.ok') === 'OK' ? 'Nom complet' : 'Full name'}
                                         placeholderTextColor="#9ca3af"
                                         value={name}
                                         onChangeText={setName}
@@ -108,7 +110,7 @@ export default function LoginScreen() {
                             <Ionicons name="mail-outline" size={24} color="#6b7280" style={styles.inputIcon} />
                             <TextInput
                                 style={styles.input}
-                                placeholder="Email"
+                                placeholder={t('auth.email')}
                                 placeholderTextColor="#9ca3af"
                                 value={email}
                                 keyboardType="email-address"
@@ -128,7 +130,7 @@ export default function LoginScreen() {
   />
   <TextInput
     style={styles.input}
-    placeholder="Mot de passe"
+    placeholder={t('auth.password')}
     placeholderTextColor="#9ca3af"
     value={password}
     onChangeText={setPassword}
@@ -144,7 +146,7 @@ export default function LoginScreen() {
     <Ionicons
       name={showPassword ? "eye-off-outline" : "eye-outline"}
       size={24}
-      color="#6b7280" // Changed from #fff to gray to be visible
+      color="#6b7280"
     />
   </TouchableOpacity>
 </View>
@@ -158,10 +160,10 @@ export default function LoginScreen() {
                                 style={styles.submitButtonGradient}
                             >
                                 {isLoading ? (
-                                    <Text style={styles.submitButtonText}>Chargement...</Text>
+                                    <Text style={styles.submitButtonText}>{t('common.loading')}</Text>
                                 ) : (
                                     <Text style={styles.submitButtonText}>
-                                        {isLoginMode ? 'Se connecter' : "S'inscrire"}
+                                        {isLoginMode ? t('auth.login') : t('auth.register')}
                                     </Text>
                                 )}
                             </LinearGradient>
@@ -175,8 +177,8 @@ export default function LoginScreen() {
                             <Text style={styles.switchModeText}>
                                 {
                                     isLoginMode
-                                        ? 'Pas encore de compte ? S\'inscrire'
-                                        : 'Déjà un compte ? Se connecter'
+                                        ? t('auth.dontHaveAccount')
+                                        : t('auth.alreadyHaveAccount')
                                 }
                             </Text>
                         </TouchableOpacity>
@@ -185,7 +187,7 @@ export default function LoginScreen() {
                             <TouchableOpacity style={styles.forgotPasswordButton}
                             >
                                 <Text style={styles.forgotPasswordText}>
-                                    Mot de passe oublié ?
+                                    {t('auth.forgotPassword')}
                                 </Text>
                             </TouchableOpacity>
                         )}

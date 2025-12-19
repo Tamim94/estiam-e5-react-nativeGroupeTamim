@@ -14,6 +14,7 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { useRouter } from 'expo-router';
 import { API, Trip } from '@/services/api';
 import IMAGES_SOURCES from './trips';
+import { useTranslation } from '@/hooks/use-translation';
 
 // Keep colors for consistency
 const PURPLE = '#a855f7';
@@ -23,6 +24,7 @@ const BG = '#f9fafb';
 
 export default function HomeScreen() {
   const router = useRouter();
+  const { t } = useTranslation();
   const [trips, setTrips] = useState<Trip[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -57,19 +59,19 @@ export default function HomeScreen() {
   // Redesigned Stats Configuration
   const statsConfig = [
     {
-      label: 'Total Trips',
+      label: t('home.totalTrips'),
       value: trips.length,
       icon: 'map-outline',
       colors: ['#a855f7', '#ec4899'] as const,
     },
     {
-      label: 'Upcoming',
+      label: t('home.upcoming'),
       value: upcomingTrips.length,
       icon: 'calendar-outline',
       colors: ['#3b82f6', '#06b6d4'] as const,
     },
     {
-      label: 'Favorites',
+      label: t('home.favorites'),
       value: trips.filter((t) => t.isFavorite).length,
       icon: 'heart-outline',
       colors: ['#ef4444', '#f43f5e'] as const,
@@ -83,8 +85,8 @@ export default function HomeScreen() {
         <LinearGradient colors={[PURPLE, PINK]} style={styles.header}>
           <View style={styles.headerContent}>
             <View>
-              <Text style={styles.headerSubtitle}>Hello, Traveler</Text>
-              <Text style={styles.headerTitle}>Welcome 👋</Text>
+              <Text style={styles.headerSubtitle}>{t('home.hello')}</Text>
+              <Text style={styles.headerTitle}>{t('home.welcome')}</Text>
             </View>
             {/* Optional: Add user avatar here if needed */}
           </View>
@@ -116,14 +118,14 @@ export default function HomeScreen() {
           {/* Upcoming Trips */}
           <View style={styles.section}>
             <View style={styles.sectionHeader}>
-              <Text style={styles.sectionTitle}>Upcoming trips</Text>
+              <Text style={styles.sectionTitle}>{t('home.upcomingTrips')}</Text>
               <TouchableOpacity onPress={() => router.push('/(tabs)/trips')}>
-                <Text style={styles.link}>See all</Text>
+                <Text style={styles.link}>{t('home.seeAll')}</Text>
               </TouchableOpacity>
             </View>
 
             {upcomingTrips.length === 0 && !loading && (
-              <Text style={styles.empty}>No upcoming trips scheduled.</Text>
+              <Text style={styles.empty}>{t('home.noUpcoming')}</Text>
             )}
 
             <ScrollView horizontal showsHorizontalScrollIndicator={false}>
@@ -178,7 +180,7 @@ export default function HomeScreen() {
 
           {/* Quick Actions (Styled like Profile Menu Items) */}
           <View style={styles.section}>
-            <Text style={styles.sectionTitle}>Quick actions</Text>
+            <Text style={styles.sectionTitle}>{t('home.quickActions')}</Text>
 
             <TouchableOpacity
               style={styles.actionItem}
@@ -191,9 +193,9 @@ export default function HomeScreen() {
                 <Ionicons name="add" size={24} color="white" />
               </LinearGradient>
               <View style={styles.actionInfo}>
-                <Text style={styles.actionTitle}>Add a trip</Text>
+                <Text style={styles.actionTitle}>{t('home.addTrip')}</Text>
                 <Text style={styles.actionSubtitle}>
-                  Plan a new adventure
+                  {t('home.planNewAdventure')}
                 </Text>
               </View>
               <Ionicons name="chevron-forward" size={20} color={GRAY} />
@@ -210,9 +212,9 @@ export default function HomeScreen() {
                 <Ionicons name="heart" size={24} color="white" />
               </LinearGradient>
               <View style={styles.actionInfo}>
-                <Text style={styles.actionTitle}>View favorites</Text>
+                <Text style={styles.actionTitle}>{t('home.viewFavorites')}</Text>
                 <Text style={styles.actionSubtitle}>
-                  See your bucket list
+                  {t('home.seeBucketList')}
                 </Text>
               </View>
               <Ionicons name="chevron-forward" size={20} color={GRAY} />

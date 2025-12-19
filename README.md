@@ -73,7 +73,7 @@ Elle permet aux utilisateurs de créer, consulter et organiser leurs voyages, av
 - Support offline (création mise en queue)
 - Cache local des voyages
 - Recherche (titre + destination)
--  Mapview des voyages avec localisation (react native webview + leaflet + OpenStreetMap)
+-  Mapview des voyages avec localisation (react native webview + leaflet + OpenStreetMap PSK JE NAI PAS DE CLE API GOOGLE MAPP!!)
 - Filtres disponibles :
     - All
     - Upcoming
@@ -102,6 +102,7 @@ Elle permet aux utilisateurs de créer, consulter et organiser leurs voyages, av
 ### 👤 Profile
 - Visualisation et modification du profil (nom, avatar)
 - Affichage des statistiques : photos, favoris, voyages
+- Selection de la langue (FR / EN) avec persistance (avec hook use.translation.ts et config i18n.ts + fichiers de traduction locales fr.json et en.json)
 
 ---
 

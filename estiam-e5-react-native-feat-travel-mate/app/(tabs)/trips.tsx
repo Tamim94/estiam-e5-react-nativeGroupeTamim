@@ -17,9 +17,11 @@ import { useRouter } from "expo-router";
 import { API, Trip } from "@/services/api";
 import IMAGES_SOURCES from "./index";
 import { toggleFavorite as toggleFavoriteStorage } from "@/services/favorites";
+import { useTranslation } from "@/hooks/use-translation";
 
 export default function TripsScreen() {
   const router = useRouter();
+  const { t } = useTranslation();
 
   const [trips, setTrips] = useState<Trip[]>([]);
   const [loading, setLoading] = useState(true);
@@ -36,6 +38,17 @@ export default function TripsScreen() {
     "Past",
     "Favorites",
   ];
+
+  // Tab labels mapping for translations
+  const getTabLabel = (tab: "All" | "Upcoming" | "Past" | "Favorites") => {
+    const labels = {
+      All: t('trips.all'),
+      Upcoming: t('trips.upcoming'),
+      Past: t('trips.past'),
+      Favorites: t('trips.favorites'),
+    };
+    return labels[tab];
+  };
 
   useFocusEffect(
     useCallback(() => {
@@ -202,7 +215,7 @@ export default function TripsScreen() {
       {/* Header */}
       <View style={styles.header}>
         <View style={styles.headerTop}>
-          <Text style={styles.headerTitle}>My Trips</Text>
+          <Text style={styles.headerTitle}>{t('trips.myTrips')}</Text>
           <TouchableOpacity
             style={styles.viewToggle}
             onPress={() => setViewMode(viewMode === "list" ? "map" : "list")}
@@ -219,7 +232,7 @@ export default function TripsScreen() {
           <Ionicons name="search" size={20} color="#9ca3af" />
           <TextInput
             style={styles.searchInput}
-            placeholder="Search trips"
+            placeholder={t('trips.searchTrips')}
             value={query}
             onChangeText={setQuery}
             placeholderTextColor="#9ca3af"
@@ -241,7 +254,7 @@ export default function TripsScreen() {
                 selectedTab === tab && styles.tabTextActive,
               ]}
             >
-              {tab}
+              {getTabLabel(tab)}
             </Text>
           </TouchableOpacity>
         ))}
@@ -255,21 +268,21 @@ export default function TripsScreen() {
           contentContainerStyle={styles.listContent}
         >
           {loading && (
-            <Text style={styles.loadingText}>Loading...</Text>
+            <Text style={styles.loadingText}>{t('common.loading')}</Text>
           )}
 
           {!loading && filteredTrips.length === 0 && (
             <View style={styles.emptyContainer}>
               <Ionicons name="airplane-outline" size={64} color="#d1d5db" />
-              <Text style={styles.emptyText}>No trips found</Text>
+              <Text style={styles.emptyText}>{t('trips.noTripsFound')}</Text>
               <Text style={styles.emptySubtext}>
                 {selectedTab === "Past"
-                  ? "You don't have any past trips yet"
+                  ? t('trips.noTrips')
                   : selectedTab === "Upcoming"
-                  ? "You don't have any upcoming trips"
+                  ? t('trips.noTrips')
                   : selectedTab === "Favorites"
-                  ? "You haven't favorited any trips"
-                  : "Start by adding your first trip!"}
+                  ? t('favorites.noFavorites')
+                  : t('trips.createFirstTrip')}
               </Text>
             </View>
           )}

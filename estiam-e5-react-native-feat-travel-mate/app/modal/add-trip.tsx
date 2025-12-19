@@ -23,6 +23,7 @@ import DateTimePicker, {
 } from "@react-native-community/datetimepicker";
 import Ionicons from "@expo/vector-icons/Ionicons";
 import { API } from "@/services/api";
+import { useTranslation } from "@/hooks/use-translation";
 
 interface Coordinates {
   latitude: number;
@@ -32,6 +33,7 @@ interface Coordinates {
 export default function AddTripModal() {
   const router = useRouter();
   const webViewRef = useRef<WebView>(null);
+  const { t } = useTranslation();
 
   const [tripTitle, setTripTitle] = useState("");
   const [destination, setDestination] = useState("");
@@ -57,27 +59,27 @@ export default function AddTripModal() {
 
   const validateForm = () => {
     if (!tripTitle.trim()) {
-      Alert.alert("Erreur", "Le titre est obligatoire");
+      Alert.alert(t('common.error'), t('addTrip.requiredFields'));
       return false;
     }
 
     if (!DESTINATION_REGEX.test(destination)) {
       Alert.alert(
-        "Erreur",
-        'La destination doit être au format "Ville, Pays"'
+        t('common.error'),
+        t('addTrip.destinationPlaceholder')
       );
       return false;
     }
 
     if (!startDate || !endDate) {
-      Alert.alert("Erreur", "Les dates sont obligatoires");
+      Alert.alert(t('common.error'), t('addTrip.requiredFields'));
       return false;
     }
 
     if (endDate < startDate) {
       Alert.alert(
-        "Erreur",
-        "La date de retour doit être après la date de départ"
+        t('common.error'),
+        t('addTrip.requiredFields')
       );
       return false;
     }
@@ -91,14 +93,14 @@ export default function AddTripModal() {
 
   const showPermissionAlert = (title: string, message: string) => {
     Alert.alert(title, message, [
-      { text: "Annuler", style: "cancel" },
-      { text: "Ouvrir les paramètres", onPress: openAppSettings },
+      { text: t('common.cancel'), style: "cancel" },
+      { text: t('settings.title'), onPress: openAppSettings },
     ]);
   };
 
   const showSimulatorAlert = (feature: string) => {
     Alert.alert(
-      "Fonctionnalité non disponible",
+      t('common.error'),
       `La fonctionnalité "${feature}" n'est pas disponible sur un simulateur.`,
       [{ text: "D'accord", style: "cancel" }]
     );
@@ -146,8 +148,8 @@ export default function AddTripModal() {
 
       if (status !== "granted") {
         showPermissionAlert(
-          "Permission Galerie refusée",
-          "Nous avons besoin de l'accès à vos photos."
+          t('addTrip.galleryPermissionDenied'),
+          t('addTrip.galleryPermissionDenied')
         );
         return;
       }
@@ -173,8 +175,8 @@ export default function AddTripModal() {
       const { status } = await ImagePicker.requestCameraPermissionsAsync();
       if (status !== "granted") {
         showPermissionAlert(
-          "Permission refusée",
-          "Nous avons besoin de l'accès à la caméra."
+          t('addTrip.cameraPermissionDenied'),
+          t('addTrip.cameraPermissionDenied')
         );
         return;
       }
@@ -200,8 +202,8 @@ export default function AddTripModal() {
       const { status } = await Location.requestForegroundPermissionsAsync();
       if (status !== "granted") {
         showPermissionAlert(
-          "Permission Localisation refusée",
-          "Nous avons besoin de l'accès à votre localisation."
+          t('addTrip.locationPermissionDenied'),
+          t('addTrip.locationPermissionDenied')
         );
         return;
       }
@@ -365,14 +367,14 @@ export default function AddTripModal() {
 
       await API.createTrip(trip);
 
-      Alert.alert("Succès", "Voyage créé avec succès", [
-        { text: "OK", onPress: () => router.back() },
+      Alert.alert(t('common.success'), t('trips.addSuccess'), [
+        { text: t('common.ok'), onPress: () => router.back() },
       ]);
     } catch (error: any) {
       console.error("Error creating trip:", error);
       Alert.alert(
-        "Erreur",
-        `Impossible de créer le voyage: ${error.message || error}`
+        t('common.error'),
+        t('trips.addError') + `: ${error.message || error}`
       );
     } finally {
       setIsUploading(false);
@@ -381,12 +383,12 @@ export default function AddTripModal() {
 
   return (
     <SafeAreaView style={styles.container} edges={["bottom"]}>
-      <Text style={styles.pageTitle}>Add New Trip</Text>
+      <Text style={styles.pageTitle}>{t('addTrip.title')}</Text>
 
       <ScrollView showsVerticalScrollIndicator={false}>
         {/* Cover Photo */}
         <View style={styles.section}>
-          <Text style={styles.label}>Cover photo</Text>
+          <Text style={styles.label}>{t('addTrip.addImages')}</Text>
           <View style={styles.photoUpload}>
             <View style={styles.photoButtons}>
               <TouchableOpacity style={styles.photoButton} onPress={takePhoto}>
@@ -397,18 +399,18 @@ export default function AddTripModal() {
               </TouchableOpacity>
             </View>
             <Text style={styles.photoText}>
-              Take a photo or choose from library
+              {t('addTrip.selectImages')}
             </Text>
-            <Text style={styles.photoSubText}>Access camera and photos</Text>
+            <Text style={styles.photoSubText}>{t('addTrip.addImages')}</Text>
           </View>
         </View>
 
         {/* Title */}
         <View style={styles.section}>
-          <Text style={styles.label}>Trip Title</Text>
+          <Text style={styles.label}>{t('addTrip.tripTitle')}</Text>
           <TextInput
             style={styles.input}
-            placeholder="Enter trip title"
+            placeholder={t('addTrip.tripTitlePlaceholder')}
             value={tripTitle}
             onChangeText={setTripTitle}
             placeholderTextColor="#9ca3af"
@@ -417,12 +419,12 @@ export default function AddTripModal() {
 
         {/* Destination with location */}
         <View style={styles.section}>
-          <Text style={styles.label}>Destination</Text>
+          <Text style={styles.label}>{t('addTrip.destination')}</Text>
           <View style={styles.inputWithIcon}>
             <Ionicons name="location-outline" size={20} color="#6b7280" />
             <TextInput
               style={styles.inputFlex}
-              placeholder="City, Country"
+              placeholder={t('addTrip.destinationPlaceholder')}
               value={destination}
               onChangeText={setDestination}
               placeholderTextColor="#9ca3af"
@@ -435,7 +437,7 @@ export default function AddTripModal() {
               onPress={getLocation}
             >
               <Ionicons name="navigate" size={18} color="#a855f7" />
-              <Text style={styles.locationButtonText}>Current Location</Text>
+              <Text style={styles.locationButtonText}>{t('addTrip.currentLocation')}</Text>
             </TouchableOpacity>
 
             <TouchableOpacity
@@ -443,7 +445,7 @@ export default function AddTripModal() {
               onPress={openMapPicker}
             >
               <Ionicons name="map" size={18} color="#a855f7" />
-              <Text style={styles.locationButtonText}>Pick on Map</Text>
+              <Text style={styles.locationButtonText}>{t('addTrip.pickLocation')}</Text>
             </TouchableOpacity>
           </View>
 
@@ -459,7 +461,7 @@ export default function AddTripModal() {
 
         {/* Start Date */}
         <View style={styles.section}>
-          <Text style={styles.label}>Date de départ</Text>
+          <Text style={styles.label}>{t('addTrip.startDate')}</Text>
           <TouchableOpacity
             style={styles.inputWithIcon}
             onPress={() => setShowStartPicker(true)}
@@ -471,7 +473,7 @@ export default function AddTripModal() {
                 !startDate && styles.dateTextPlaceholder,
               ]}
             >
-              {startDate ? formatDate(startDate) : "Sélectionner une date"}
+              {startDate ? formatDate(startDate) : t('addTrip.selectDate')}
             </Text>
           </TouchableOpacity>
 
@@ -489,7 +491,7 @@ export default function AddTripModal() {
                   style={styles.pickerDoneButton}
                   onPress={() => setShowStartPicker(false)}
                 >
-                  <Text style={styles.pickerDoneText}>Done</Text>
+                  <Text style={styles.pickerDoneText}>{t('common.ok')}</Text>
                 </TouchableOpacity>
               )}
             </View>
@@ -498,7 +500,7 @@ export default function AddTripModal() {
 
         {/* End Date */}
         <View style={styles.section}>
-          <Text style={styles.label}>Date de retour</Text>
+          <Text style={styles.label}>{t('addTrip.endDate')}</Text>
           <TouchableOpacity
             style={styles.inputWithIcon}
             onPress={() => setShowEndPicker(true)}
@@ -507,7 +509,7 @@ export default function AddTripModal() {
             <Text
               style={[styles.dateText, !endDate && styles.dateTextPlaceholder]}
             >
-              {endDate ? formatDate(endDate) : "Sélectionner une date"}
+              {endDate ? formatDate(endDate) : t('addTrip.selectDate')}
             </Text>
           </TouchableOpacity>
 
@@ -526,7 +528,7 @@ export default function AddTripModal() {
                   style={styles.pickerDoneButton}
                   onPress={() => setShowEndPicker(false)}
                 >
-                  <Text style={styles.pickerDoneText}>Done</Text>
+                  <Text style={styles.pickerDoneText}>{t('common.ok')}</Text>
                 </TouchableOpacity>
               )}
             </View>
@@ -535,10 +537,10 @@ export default function AddTripModal() {
 
         {/* Description */}
         <View style={styles.section}>
-          <Text style={styles.label}>Description</Text>
+          <Text style={styles.label}>{t('addTrip.description')}</Text>
           <TextInput
             style={[styles.input, styles.textArea]}
-            placeholder="Décrivez votre voyage..."
+            placeholder={t('addTrip.descriptionPlaceholder')}
             value={description}
             onChangeText={setDescription}
             multiline
@@ -552,7 +554,7 @@ export default function AddTripModal() {
         {selectedImages.length > 0 && (
           <View style={styles.section}>
             <Text style={styles.label}>
-              Images sélectionnées ({selectedImages.length})
+              {t('addTrip.selectImages')} ({selectedImages.length})
             </Text>
             <ScrollView horizontal showsHorizontalScrollIndicator={false}>
               {selectedImages.map((uri, index) => (
@@ -581,7 +583,7 @@ export default function AddTripModal() {
               <View style={styles.progressInfo}>
                 <Ionicons name="cloud-upload-outline" size={24} color="#a855f7" />
                 <Text style={styles.progressText}>
-                  Téléchargement en cours...
+                  {t('addTrip.uploadingImages')}
                 </Text>
               </View>
               <Text style={styles.progressPercent}>{uploadProgress}%</Text>
@@ -610,7 +612,7 @@ export default function AddTripModal() {
             end={{ x: 1, y: 0 }}
           >
             <Text style={styles.saveButtonText}>
-              {isUploading ? "Enregistrement ..." : "Créer le voyage"}
+              {isUploading ? t('addTrip.saving') : t('addTrip.save')}
             </Text>
           </LinearGradient>
         </TouchableOpacity>
@@ -627,11 +629,11 @@ export default function AddTripModal() {
         <SafeAreaView style={styles.mapModalContainer}>
           <View style={styles.mapHeader}>
             <TouchableOpacity onPress={() => setShowMapModal(false)}>
-              <Text style={styles.mapCancelText}>Annuler</Text>
+              <Text style={styles.mapCancelText}>{t('common.cancel')}</Text>
             </TouchableOpacity>
-            <Text style={styles.mapTitle}>Choisir un lieu</Text>
+            <Text style={styles.mapTitle}>{t('addTrip.pickLocation')}</Text>
             <TouchableOpacity onPress={confirmMapLocation}>
-              <Text style={styles.mapConfirmText}>Confirmer</Text>
+              <Text style={styles.mapConfirmText}>{t('common.confirm')}</Text>
             </TouchableOpacity>
           </View>
 

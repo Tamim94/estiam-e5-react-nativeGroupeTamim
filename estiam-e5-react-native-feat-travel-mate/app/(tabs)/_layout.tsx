@@ -4,6 +4,7 @@ import { Platform } from 'react-native';
 import Ionicons from '@expo/vector-icons/Ionicons';
 import { HapticTab } from '@/components/haptic-tab';
 import { useColorScheme } from '@/hooks/use-color-scheme';
+import { useTranslation } from '@/hooks/use-translation';
 
 // Using the same Purple from your Home/Profile screens
 const PRIMARY_COLOR = '#a855f7';
@@ -11,6 +12,7 @@ const INACTIVE_COLOR = '#9ca3af'; // Gray
 
 export default function TabLayout() {
   const colorScheme = useColorScheme();
+  const { t } = useTranslation();
 
   return (
     <Tabs
@@ -41,7 +43,7 @@ export default function TabLayout() {
       <Tabs.Screen
         name="index"
         options={{
-          title: 'Home',
+          title: t('tabs.home'),
           tabBarIcon: ({ color, focused }) => (
             <Ionicons
                 name={focused ? "home" : "home-outline"}
@@ -54,7 +56,7 @@ export default function TabLayout() {
       <Tabs.Screen
         name="trips"
         options={{
-          title: 'Trips',
+          title: t('tabs.trips'),
           tabBarIcon: ({ color, focused }) => (
             <Ionicons
                 name={focused ? "map" : "map-outline"}
@@ -82,7 +84,7 @@ export default function TabLayout() {
       <Tabs.Screen
         name="profile"
         options={{
-          title: 'Profile',
+          title: t('tabs.profile'),
           tabBarIcon: ({ color, focused }) => (
             <Ionicons
                 name={focused ? "person" : "person-outline"}
