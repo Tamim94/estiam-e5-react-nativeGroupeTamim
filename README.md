@@ -9,7 +9,7 @@
 ## 🚀 Description
 
 TravelMate est une application mobile de gestion de voyages développée avec **React Native** et **Expo Router**.  
-Elle permet aux utilisateurs de créer, consulter et organiser leurs voyages, avec support **offline**, **upload d'images**, **authentification JWT** et **notifications**.
+Elle permet aux utilisateurs de créer, supprimer , update et  consulter et organiser leurs voyages, avec support **offline**, **upload d'images**,**authentification JWT** et **notifications**.
 
 ---
 
@@ -129,10 +129,11 @@ Des ajustements ont été faits côté backend (`server.js`) pour assurer la com
 
 ---
 
-## 📌 Limites connues
+## 📌 Test unitaire et qualité de code
+npm test - Run all tests
+npm run test:watch - Run in watch mode
+npm run test:coverage - Run with coverage report
 
-- Modification / suppression de voyage non implémentées (non requises explicitement)
-- Favoris non persistés côté backend (choix volontaire documenté)
 
 ---
 
