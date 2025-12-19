@@ -102,7 +102,7 @@ export default function TripsScreen() {
   };
 
   const handleTripPress = (trip: Trip) => {
-    router.push(`/trip/${trip.id}`);
+    router.push(`/trips/${trip.id}`);
   };
 
   const handleDeleteTrip = (trip: Trip) => {
@@ -248,7 +248,7 @@ export default function TripsScreen() {
   const handleModalViewDetails = () => {
     if (selectedTrip) {
       setSelectedTrip(null);
-      router.push(`/trip/${selectedTrip.id}`);
+      router.push(`/trips/${selectedTrip.id}`);
     }
   };
 

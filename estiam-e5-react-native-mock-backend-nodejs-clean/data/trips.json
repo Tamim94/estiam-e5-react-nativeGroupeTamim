@@ -52,24 +52,6 @@
     }
   },
   {
-    "id": "d85be0ba-c246-4ffe-84a6-6adf7ad5ea30",
-    "title": "Second trip - Paris",
-    "destination": "Paris, France",
-    "startDate": "",
-    "endDate": "09/12/2025",
-    "image": "",
-    "description": "Mon deuxième voyage en France",
-    "photos": [
-      "file:///Users/o.hema/Library/Developer/CoreSimulator/Devices/505ECBF2-23DC-41A0-A846-59C7185073E0/data/Containers/Data/Application/63BEDD56-9EAE-4AD5-A5B8-F897F0461B93/Library/Caches/ExponentExperienceData/@anonymous/MyFirstApp-c93152af-9e6d-411f-978f-37ed9de9c037/ImagePicker/96022B75-833D-4C0F-9076-9503D1FE1683.jpeg",
-      "file:///Users/o.hema/Library/Developer/CoreSimulator/Devices/505ECBF2-23DC-41A0-A846-59C7185073E0/data/Containers/Data/Application/63BEDD56-9EAE-4AD5-A5B8-F897F0461B93/Library/Caches/ExponentExperienceData/@anonymous/MyFirstApp-c93152af-9e6d-411f-978f-37ed9de9c037/ImagePicker/C0A8D6D6-9570-4A87-9D36-182392BA52E0.jpeg",
-      "file:///Users/o.hema/Library/Developer/CoreSimulator/Devices/505ECBF2-23DC-41A0-A846-59C7185073E0/data/Containers/Data/Application/63BEDD56-9EAE-4AD5-A5B8-F897F0461B93/Library/Caches/ExponentExperienceData/@anonymous/MyFirstApp-c93152af-9e6d-411f-978f-37ed9de9c037/ImagePicker/279F14DA-757D-41A0-97B1-0E3F51828DB7.jpeg"
-    ],
-    "location": {
-      "lat": 0,
-      "lng": 0
-    }
-  },
-  {
     "id": "15e36922-2545-4ef9-aed5-496b4625057c",
     "title": "Test Hors ligne",
     "destination": "Paris, France",
@@ -207,6 +189,22 @@
     "location": {
       "lat": 48.869760063012365,
       "lng": 2.416477203369141
+    }
+  },
+  {
+    "id": "c0e4cb66-3eba-4546-9d46-e91a83656273",
+    "title": "Hello trip voyage",
+    "destination": "Paris, France",
+    "startDate": "2025-12-22",
+    "endDate": "2025-12-29",
+    "image": "http://10.0.2.2:4000/uploads/1766173574672-578d66e5-a604-4c36-8eea-26ba56f760cb.jpeg",
+    "description": "sdvdfsbhgrhdghrgrgfrg",
+    "photos": [
+      "http://10.0.2.2:4000/uploads/1766173574672-578d66e5-a604-4c36-8eea-26ba56f760cb.jpeg"
+    ],
+    "location": {
+      "lat": 0,
+      "lng": 0
     }
   }
 ]
