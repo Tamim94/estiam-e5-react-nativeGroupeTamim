@@ -73,6 +73,7 @@ Elle permet aux utilisateurs de créer, consulter et organiser leurs voyages, av
 - Support offline (création mise en queue)
 - Cache local des voyages
 - Recherche (titre + destination)
+-  Mapview des voyages avec localisation (react native webview + leaflet + OpenStreetMap)
 - Filtres disponibles :
     - All
     - Upcoming

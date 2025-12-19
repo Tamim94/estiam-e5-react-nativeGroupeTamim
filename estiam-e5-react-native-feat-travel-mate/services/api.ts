@@ -13,45 +13,29 @@ export interface Trip {
   image?: string;
   photos?: string[];
   isFavorite?: boolean;
+  location?: {
+    lat: number;
+    lng: number;
+  };
 }
 
-
-/**
- * Convert DD/MM/YYYY → ISO (YYYY-MM-DD)
- */
 function normalizeDate(date?: string): string {
   if (!date) return "";
-
-  // Already ISO
-  if (/^\d{4}-\d{2}-\d{2}/.test(date)) {
-    return date;
-  }
-
-  // DD/MM/YYYY
+  if (/^\d{4}-\d{2}-\d{2}/.test(date)) return date;
   const match = /^(\d{2})\/(\d{2})\/(\d{4})$/.exec(date);
   if (match) {
     const [, dd, mm, yyyy] = match;
     return `${yyyy}-${mm}-${dd}`;
   }
-
   return "";
 }
 
-/**
- * Ensure image is a valid React Native source
- */
 function normalizeImage(uri?: string): string | undefined {
   if (!uri) return undefined;
-
-  // Ignore local simulator files
   if (uri.startsWith("file://")) return undefined;
-
   return uri;
 }
 
-/**
- * Normalize backend trip → frontend-safe trip
- */
 function normalizeTrip(trip: any): Trip {
   return {
     ...trip,
@@ -61,6 +45,7 @@ function normalizeTrip(trip: any): Trip {
     photos: Array.isArray(trip.photos)
       ? trip.photos.filter((p: string) => !p.startsWith("file://"))
       : [],
+    location: trip.location || undefined,
   };
 }
 
@@ -71,46 +56,46 @@ export const API = {
     const match = /\.(\w+)$/.exec(filename);
     const type = match ? `image/${match[1]}` : "image/jpeg";
 
-    formData.append(
-      "file",
-      {
-        uri,
-        name: filename,
-        type,
-      } as any
-    );
+    formData.append("file", {
+      uri,
+      name: filename,
+      type,
+    } as any);
 
     const response = await fetch(`${config.mockBackendUrl}/uploads`, {
       method: "POST",
       body: formData,
     });
 
-    if (!response.ok) {
-      throw new Error("Image upload failed");
-    }
+    if (!response.ok) throw new Error("Image upload failed");
 
     const data = await response.json();
     return data.url;
   },
 
-  async createTrip(trip: Trip) {
+  async createTrip(trip: Trip & { location?: { latitude: number; longitude: number } }) {
     const isOnline = await OFFLINE.checkIsOnline();
+
+    // Convert frontend coords to backend format
+    const payload = {
+      ...trip,
+      location: trip.location
+        ? { lat: trip.location.latitude, lng: trip.location.longitude }
+        : undefined,
+    };
 
     if (!isOnline) {
       await OFFLINE.addToQueue({
         type: "CREATE",
         endpoint: "/trips",
         method: "POST",
-        payload: trip,
+        payload,
       });
-
-      return { ...trip, id: `local-${Date.now()}` };
+      return { ...payload, id: `local-${Date.now()}` };
     }
 
     const tokens = await auth.getTokens();
-    if (!tokens?.accessToken) {
-      throw new Error("Non authentifié");
-    }
+    if (!tokens?.accessToken) throw new Error("Non authentifié");
 
     const response = await fetch(`${config.mockBackendUrl}/trips`, {
       method: "POST",
@@ -118,13 +103,10 @@ export const API = {
         "Content-Type": "application/json",
         Authorization: `Bearer ${tokens.accessToken}`,
       },
-      body: JSON.stringify(trip),
+      body: JSON.stringify(payload),
     });
 
-    if (!response.ok) {
-      throw new Error("Failed to create trip");
-    }
-
+    if (!response.ok) throw new Error("Failed to create trip");
     return response.json();
   },
 
@@ -134,39 +116,25 @@ export const API = {
     if (isOnline) {
       try {
         const tokens = await auth.getTokens();
-        if (!tokens?.accessToken) {
-          throw new Error("Non authentifié");
-        }
+        if (!tokens?.accessToken) throw new Error("Non authentifié");
 
         const response = await fetch(`${config.mockBackendUrl}/trips`, {
-          headers: {
-            Authorization: `Bearer ${tokens.accessToken}`,
-          },
+          headers: { Authorization: `Bearer ${tokens.accessToken}` },
         });
 
-        if (!response.ok) {
-          throw new Error("Failed to fetch trips");
-        }
+        if (!response.ok) throw new Error("Failed to fetch trips");
 
         const rawTrips = await response.json();
+        if (!Array.isArray(rawTrips)) throw new Error("Trips response is not an array");
 
-        if (!Array.isArray(rawTrips)) {
-          throw new Error("Trips response is not an array");
-        }
+        const favorites = await getFavorites();
+        const normalized = rawTrips.map((trip) => {
+          const t = normalizeTrip(trip);
+          return { ...t, isFavorite: favorites.includes(t.id) };
+        });
 
-const favorites = await getFavorites();
-
-const normalized = rawTrips.map(trip => {
-  const t = normalizeTrip(trip);
-  return {
-    ...t,
-    isFavorite: favorites.includes(t.id),
-  };
-});
-
-await OFFLINE.cacheTrips(normalized);
-return normalized;
-
+        await OFFLINE.cacheTrips(normalized);
+        return normalized;
       } catch (error) {
         console.log("Fetch error, using cache", error);
         return (await OFFLINE.getCachedTrips()) || [];
