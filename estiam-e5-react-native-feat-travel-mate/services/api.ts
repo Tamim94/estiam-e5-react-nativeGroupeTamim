@@ -1,6 +1,7 @@
 import { config } from "@/utils/env";
 import { OFFLINE } from "./offline";
 import { auth } from "./auth";
+import { getFavorites } from "./favorites";
 
 export interface Trip {
   id?: string;
@@ -11,7 +12,9 @@ export interface Trip {
   description: string;
   image?: string;
   photos?: string[];
+  isFavorite?: boolean;
 }
+
 
 /**
  * Convert DD/MM/YYYY → ISO (YYYY-MM-DD)
@@ -151,10 +154,19 @@ export const API = {
           throw new Error("Trips response is not an array");
         }
 
-        const normalized = rawTrips.map(normalizeTrip);
+const favorites = await getFavorites();
 
-        await OFFLINE.cacheTrips(normalized);
-        return normalized;
+const normalized = rawTrips.map(trip => {
+  const t = normalizeTrip(trip);
+  return {
+    ...t,
+    isFavorite: favorites.includes(t.id),
+  };
+});
+
+await OFFLINE.cacheTrips(normalized);
+return normalized;
+
       } catch (error) {
         console.log("Fetch error, using cache", error);
         return (await OFFLINE.getCachedTrips()) || [];

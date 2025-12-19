@@ -1,169 +1,226 @@
-
-
-import React from 'react';
-
-import { Image } from 'expo-image';
-import { Platform, StyleSheet, ScrollView, View, Text, TouchableOpacity } from 'react-native';
-
-import { HelloWave } from '@/components/hello-wave';
-import ParallaxScrollView from '@/components/parallax-scroll-view';
-import { ThemedText } from '@/components/themed-text';
-import { ThemedView } from '@/components/themed-view';
-import { Link } from 'expo-router';
+import {
+  View,
+  Text,
+  StyleSheet,
+  ScrollView,
+  TouchableOpacity,
+  Image,
+} from 'react-native';
+import { useFocusEffect } from '@react-navigation/native';
+import { useCallback, useState, useMemo } from 'react';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { LinearGradient } from 'expo-linear-gradient';
 import Ionicons from '@expo/vector-icons/Ionicons';
+import { LinearGradient } from 'expo-linear-gradient';
+import { useRouter } from 'expo-router';
+import { API, Trip } from '@/services/api';
+import IMAGES_SOURCES from './trips';
 
- export  const IMAGES_SOURCES = {
-    paris: require('@/assets/images/paris.jpeg'),
-    tokyo: require('@/assets/images/tokyo.jpeg'),
-    bali : require('@/assets/images/bali.jpeg'),
-  }
+// Keep colors for consistency
+const PURPLE = '#a855f7';
+const PINK = '#ec4899';
+const GRAY = '#6b7280';
+const BG = '#f9fafb';
 
 export default function HomeScreen() {
+  const router = useRouter();
+  const [trips, setTrips] = useState<Trip[]>([]);
+  const [loading, setLoading] = useState(true);
 
-  const stats = [
-    { label: 'Trips', value: 12, icon: 'airplane-outline' },
-    { label: 'Photos', value: 240, icon: 'camera-outline' },
-    { label: 'Countries', value: 20, icon: 'globe-outline' },
-  ] as const;
+  useFocusEffect(
+    useCallback(() => {
+      let mounted = true;
 
-  const upcomingTrips = [
+      const load = async () => {
+        try {
+          setLoading(true);
+          const data = await API.getTrips();
+          if (mounted) setTrips(data);
+        } finally {
+          if (mounted) setLoading(false);
+        }
+      };
+
+      load();
+      return () => {
+        mounted = false;
+      };
+    }, [])
+  );
+
+  const now = new Date();
+
+  const upcomingTrips = useMemo(
+    () => trips.filter((t) => new Date(t.startDate) > now).slice(0, 5),
+    [trips]
+  );
+
+  // Redesigned Stats Configuration
+  const statsConfig = [
     {
-      id: '1',
-      title: 'Trip to Paris',
-      date: '10-20 Dec',
-      daysLeft: 8,
-      image: 'paris'
+      label: 'Total Trips',
+      value: trips.length,
+      icon: 'map-outline',
+      colors: ['#a855f7', '#ec4899'] as const,
     },
     {
-      id: '2',
-      title: 'Trip to Tokyo',
-      date: '10-15 Jan',
-      daysLeft: 29,
-      image: 'tokyo'
+      label: 'Upcoming',
+      value: upcomingTrips.length,
+      icon: 'calendar-outline',
+      colors: ['#3b82f6', '#06b6d4'] as const,
+    },
+    {
+      label: 'Favorites',
+      value: trips.filter((t) => t.isFavorite).length,
+      icon: 'heart-outline',
+      colors: ['#ef4444', '#f43f5e'] as const,
     },
   ];
 
-
-
-  const activities = [
-    { icon: 'walk-outline', text: 'Went for a walk in the park', time: '2 hours ago' },
-    { icon: 'camera-outline', text: 'Added 5 new photos to "Summer Trip"', time: '1 day ago' },
-    { icon: 'airplane-outline', text: 'Booked a flight to New York', time: '3 days ago' },
-  ] as const;
-
   return (
     <SafeAreaView style={styles.container} edges={['top']}>
-      <ScrollView>
-        {/* Header */}
-        <LinearGradient colors={['#a855f7', '#ec4899']} style={styles.header}>
-          <View style={styles.headerTop}>
+      <ScrollView showsVerticalScrollIndicator={false}>
+        {/* Header with Gradient */}
+        <LinearGradient colors={[PURPLE, PINK]} style={styles.header}>
+          <View style={styles.headerContent}>
             <View>
-              <Text style={styles.greentingText}>Hello</Text>
-              <Text style={styles.firstnameText}>Odilon!</Text>
+              <Text style={styles.headerSubtitle}>Hello, Traveler</Text>
+              <Text style={styles.headerTitle}>Welcome 👋</Text>
             </View>
-            <TouchableOpacity style={styles.notificationBtn}>
-              <Ionicons name="notifications-outline" size={24} color="rgba(255, 255, 255, 0.8)" />
-            </TouchableOpacity>
-          </View>
-
-          {/* Stats */}
-
-          {/* <View style={{ flexDirection : 'row', justifyContent : 'space-between' }}> */}
-          <View style={styles.statsContainer}>
-            {stats.map((stat, index) => (
-              <View key={index} style={styles.statCard}>
-                <Ionicons name={stat.icon} color="#fff" style={styles.statIcon} />
-                <Text style={styles.statValue}>{stat.value}</Text>
-                <Text style={styles.statLabel}>{stat.label}</Text>
-              </View>
-            ))}
+            {/* Optional: Add user avatar here if needed */}
           </View>
         </LinearGradient>
 
-        {/* Content */}
-        <View style={styles.homeContent}>
-          {/* Upcoming trips */}
-          <View style={styles.section}>
-            <View style={styles.sectionHeader}>
-              <Text style={styles.sectionTitle}>Upcoming Trips</Text>
-              <TouchableOpacity>
-                <Text style={styles.homeSeeAllBtn}>See All</Text>
-              </TouchableOpacity>
+        <View style={styles.contentContainer}>
+          {/* Stats Card (Floating Effect) */}
+          <View style={styles.statsCard}>
+            <View style={styles.statsGrid}>
+              {statsConfig.map((stat, idx) => (
+                <View key={idx} style={styles.statItem}>
+                  <LinearGradient
+                    colors={stat.colors}
+                    style={styles.statIcon}
+                  >
+                    <Ionicons
+                      name={stat.icon as any}
+                      size={20}
+                      color="white"
+                    />
+                  </LinearGradient>
+                  <Text style={styles.statValue}>{stat.value}</Text>
+                  <Text style={styles.statLabel}>{stat.label}</Text>
+                </View>
+              ))}
             </View>
           </View>
-        </View>
 
+          {/* Upcoming Trips */}
+          <View style={styles.section}>
+            <View style={styles.sectionHeader}>
+              <Text style={styles.sectionTitle}>Upcoming trips</Text>
+              <TouchableOpacity onPress={() => router.push('/(tabs)/trips')}>
+                <Text style={styles.link}>See all</Text>
+              </TouchableOpacity>
+            </View>
 
-        {
-          upcomingTrips.map((trip) => (
+            {upcomingTrips.length === 0 && !loading && (
+              <Text style={styles.empty}>No upcoming trips scheduled.</Text>
+            )}
+
+            <ScrollView horizontal showsHorizontalScrollIndicator={false}>
+              {upcomingTrips.map((trip) => (
+                <TouchableOpacity
+                  key={trip.id}
+                  style={styles.tripCard}
+                  onPress={() => router.push('/(tabs)/trips')}
+                >
+                  <Image
+                    source={
+                      IMAGES_SOURCES[trip.image as keyof typeof IMAGES_SOURCES]
+                        ? IMAGES_SOURCES[trip.image as keyof typeof IMAGES_SOURCES]
+                        : trip.image
+                        ? { uri: trip.image }
+                        : undefined
+                    }
+                    style={styles.tripImage}
+                  />
+
+                  {/* Overlay */}
+                  <LinearGradient
+                    colors={['transparent', 'rgba(0,0,0,0.8)']}
+                    style={styles.overlay}
+                  />
+
+                  {/* Favorite Badge */}
+                  {trip.isFavorite && (
+                    <View style={styles.favoriteBadge}>
+                      <Ionicons name="heart" size={16} color="white" />
+                    </View>
+                  )}
+
+                  {/* Content */}
+                  <View style={styles.tripContent}>
+                    <Text style={styles.tripTitle}>{trip.title}</Text>
+                    <View style={styles.tripMetaRow}>
+                      <Ionicons
+                        name="location-outline"
+                        size={14}
+                        color="rgba(255,255,255,0.8)"
+                      />
+                      <Text style={styles.tripDestination}>
+                        {trip.destination}
+                      </Text>
+                    </View>
+                  </View>
+                </TouchableOpacity>
+              ))}
+            </ScrollView>
+          </View>
+
+          {/* Quick Actions (Styled like Profile Menu Items) */}
+          <View style={styles.section}>
+            <Text style={styles.sectionTitle}>Quick actions</Text>
+
             <TouchableOpacity
-              key={trip.id}
-              style={styles.tripCard}>
-              <Image
-                source={IMAGES_SOURCES[trip.image as keyof typeof IMAGES_SOURCES] || trip.image}
-                style={styles.tripImage}
-              />
-              <View style={styles.tripInfo}>
-                <Text style={styles.tripTitle}>{trip.title}</Text>
-                <View style={styles.tripDate}>
-                  <Ionicons name="calendar-outline" size={16} color="#6b7280" />
-                  <Text style={styles.tripDateText}>{trip.date}</Text>
-                </View>
-                <View style={styles.tripBadge}>
-                  <Text style={styles.tripBadgeText}>Dans {trip.daysLeft} jours </Text>
-                </View>
+              style={styles.actionItem}
+              onPress={() => router.push('/modal/add-trip')}
+            >
+              <LinearGradient
+                colors={['#a855f7', '#ec4899']}
+                style={styles.actionIconBox}
+              >
+                <Ionicons name="add" size={24} color="white" />
+              </LinearGradient>
+              <View style={styles.actionInfo}>
+                <Text style={styles.actionTitle}>Add a trip</Text>
+                <Text style={styles.actionSubtitle}>
+                  Plan a new adventure
+                </Text>
               </View>
-            </TouchableOpacity>))
-        }
-
-
-        {/* Quick Actions */}
-        <View style={styles.section}>
-          <Text style={{ ...styles.sectionTitle, paddingHorizontal: 12 }}>Quick Actions</Text>
-          <View style={styles.quickActionsGrid}>
-            <TouchableOpacity>
-              <LinearGradient colors={['#a855f7', '#ec4899']} style={styles.quickActionCard}>
-                <Ionicons name="add-circle-outline" size={24} color="#fff" />
-                <Text style={styles.quickActionLabel}>New Trip</Text>
-              </LinearGradient>
+              <Ionicons name="chevron-forward" size={20} color={GRAY} />
             </TouchableOpacity>
 
-            <TouchableOpacity>
-              <LinearGradient colors={['#3b82f6', '#06b6d4']} style={styles.quickActionCard}>
-                <Ionicons name="camera-outline" size={24} color="#fff" />
-                <Text style={styles.quickActionLabel}>Add Photo</Text>
+            <TouchableOpacity
+              style={styles.actionItem}
+              onPress={() => router.push('/(tabs)/trips')}
+            >
+              <LinearGradient
+                colors={['#f43f5e', '#ef4444']}
+                style={styles.actionIconBox}
+              >
+                <Ionicons name="heart" size={24} color="white" />
               </LinearGradient>
-            </TouchableOpacity>
-
-            <TouchableOpacity>
-              <LinearGradient colors={['#10b981', '#059669']} style={styles.quickActionCard}>
-                <Ionicons name="map-outline" size={24} color="#fff" />
-                <Text style={styles.quickActionLabel}>Explore</Text>
-              </LinearGradient>
+              <View style={styles.actionInfo}>
+                <Text style={styles.actionTitle}>View favorites</Text>
+                <Text style={styles.actionSubtitle}>
+                  See your bucket list
+                </Text>
+              </View>
+              <Ionicons name="chevron-forward" size={20} color={GRAY} />
             </TouchableOpacity>
           </View>
+
+          <View style={{ height: 40 }} />
         </View>
-
-        {/* Recent Activity */}
-
-        <View style={styles.section}>
-          <View style={{ paddingHorizontal: 12 }}>
-            <Text style={{ ...styles.sectionTitle, paddingHorizontal: 12 }}>Recent Activity</Text>
-
-            {activities.map((activity, idx) => (
-              <View style={styles.activityCard} key={idx}>
-                <Text style={styles.activityIcon}>
-                  <Ionicons name={activity.icon} size={24} color="#6b7280" /></Text>
-                <View>
-                  <Text style={styles.activityText}>{activity.text}</Text>
-                  <Text style={styles.activityTime}>{activity.time}</Text>
-                </View>
-              </View>))}
-          </View>
-        </View>
-
       </ScrollView>
     </SafeAreaView>
   );
@@ -172,70 +229,82 @@ export default function HomeScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#f9fafb'
+    backgroundColor: BG,
   },
+  /* Header Styles */
   header: {
     paddingHorizontal: 24,
-    paddingTop: 16,
-    paddingBottom: 24,
+    paddingTop: 20,
+    paddingBottom: 100, // Large padding for overlap
     borderBottomLeftRadius: 32,
-    borderBottomRightRadius: 32
+    borderBottomRightRadius: 32,
   },
-  headerTop: {
+  headerContent: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    marginBottom: 24
   },
-  greentingText: {
-    color: 'rgba(255, 255, 255, 0.8)',
-    fontSize: 24,
-  },
-  firstnameText: {
-    color: '#fff',
-    fontSize: 28,
-    fontWeight: 'bold'
-  },
-  notificationBtn: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    backgroundColor: 'rgba(255, 255, 255, 0.2)',
-    justifyContent: 'center',
-    alignItems: 'center'
-  },
-  statsContainer: {
-    flexDirection: 'row',
-    gap: 12,
-  },
-  statCard: {
-    flex: 1,
-    backgroundColor: 'rgba(255, 255, 255, 0.2)',
-    padding: 12,
-    borderRadius: 12,
-    alignItems: 'center'
-  },
-  statIcon: {
-    fontSize: 24,
+  headerSubtitle: {
+    color: 'rgba(255,255,255,0.8)',
+    fontSize: 16,
+    fontWeight: '500',
     marginBottom: 4,
   },
+  headerTitle: {
+    fontSize: 34,
+    fontWeight: 'bold',
+    color: 'white',
+  },
+
+  /* Main Content Overlay */
+  contentContainer: {
+    marginTop: -70, // Overlaps the header
+    paddingHorizontal: 24,
+  },
+
+  /* Stats Card */
+  statsCard: {
+    backgroundColor: 'white',
+    borderRadius: 24,
+    padding: 24,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 8 },
+    shadowOpacity: 0.1,
+    shadowRadius: 24,
+    elevation: 8,
+    marginBottom: 32,
+  },
+  statsGrid: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+  },
+  statItem: {
+    alignItems: 'center',
+    flex: 1,
+  },
+  statIcon: {
+    width: 48,
+    height: 48,
+    borderRadius: 16,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginBottom: 12,
+  },
   statValue: {
-    color: '#fff',
     fontSize: 20,
-    fontWeight: 'bold'
+    fontWeight: 'bold',
+    color: '#111827',
+    marginBottom: 2,
   },
   statLabel: {
-    color: 'rgba(255, 255, 255, 0.7)',
     fontSize: 12,
+    color: GRAY,
+    fontWeight: '500',
   },
-  homeContent: {
-    padding: 24,
-    paddingBottom: 0,
-    marginBottom: 0,
-  },
+
+  /* Sections */
   section: {
-    marginBottom: 24,
-    marginTop: 8,
+    marginBottom: 28,
   },
   sectionHeader: {
     flexDirection: 'row',
@@ -248,106 +317,106 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
     color: '#111827',
   },
-  homeSeeAllBtn: {
-    color: '#a855f7',
+  link: {
+    color: PURPLE,
+    fontWeight: '600',
     fontSize: 14,
-    fontWeight: 'bold'
   },
+  empty: {
+    color: GRAY,
+    fontStyle: 'italic',
+  },
+
+  /* Trip Cards */
   tripCard: {
-    backgroundColor: '#fff',
-    borderRadius: 16,
-    padding: 12,
-    flexDirection: 'row',
-    marginBottom: 12,
-    marginHorizontal: 12,
+    width: 280,
+    height: 180,
+    borderRadius: 24,
+    marginRight: 16,
+    backgroundColor: '#f3f4f6',
+    overflow: 'hidden',
     shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
+    shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 2,
+    shadowRadius: 12,
+    elevation: 5,
   },
   tripImage: {
-    width: 80,
-    height: 80,
-    borderRadius: 12,
+    width: '100%',
+    height: '100%',
   },
-  tripInfo: {
-    flex: 1,
-    marginLeft: 12,
-    justifyContent: 'center',
+  overlay: {
+    position: 'absolute',
+    left: 0,
+    right: 0,
+    bottom: 0,
+    height: '60%',
+  },
+  favoriteBadge: {
+    position: 'absolute',
+    top: 12,
+    right: 12,
+    backgroundColor: 'rgba(236, 72, 153, 0.9)', // Pink with opacity
+    padding: 8,
+    borderRadius: 50,
+    backdropFilter: 'blur(4px)',
+  },
+  tripContent: {
+    position: 'absolute',
+    bottom: 16,
+    left: 16,
+    right: 16,
   },
   tripTitle: {
+    color: 'white',
     fontSize: 18,
     fontWeight: 'bold',
-    color: '#111827',
     marginBottom: 4,
   },
-  tripDate: {
+  tripMetaRow: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 4,
-    marginBottom: 8,
   },
-  tripDateText: {
-    color: '#6b7280',
+  tripDestination: {
+    color: 'rgba(255,255,255,0.9)',
     fontSize: 14,
+    fontWeight: '500',
   },
-  tripBadge: {
-    backgroundColor: '#ede9fe',
-    paddingHorizontal: 12,
-    paddingVertical: 4,
-    borderRadius: 12,
-    alignSelf: 'flex-start',
-  },
-  tripBadgeText: {
-    color: '#7c3aed',
-    fontSize: 12,
-    fontWeight: 'bold',
-  },
-  quickActionsGrid: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginTop: 8,
-    paddingHorizontal: 12,
-  },
-  quickActionCard: {
-    width: 110,
-    height: 110,
-    borderRadius: 16,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  quickActionLabel: {
-    color: '#fff',
-    fontSize: 16,
-    textAlign: 'center',
-    fontWeight: '600',
-  },
-  activityCard: {
-    backgroundColor: '#fff',
+
+  /* Quick Action Items (Styled like Profile Menu) */
+  actionItem: {
+    backgroundColor: 'white',
     borderRadius: 16,
     padding: 16,
     flexDirection: 'row',
+    alignItems: 'center',
     marginBottom: 12,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.05,
-    shadowRadius: 2,
-    elevation: 1,
-    marginTop: 8,
+    shadowRadius: 8,
+    elevation: 2,
   },
-  activityIcon: {
-    fontSize: 24,
-    marginRight: 12,
+  actionIconBox: {
+    width: 48,
+    height: 48,
+    borderRadius: 12,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginRight: 16,
   },
-  activityText: {
-    fontSize: 14,
+  actionInfo: {
+    flex: 1,
+  },
+  actionTitle: {
+    fontSize: 16,
+    fontWeight: '600',
     color: '#111827',
-    marginBottom: 4,
+    marginBottom: 2,
   },
-  activityTime: {
-    fontSize: 12,
-    color: '#9ca3af',
-  }
+  actionSubtitle: {
+    fontSize: 13,
+    color: GRAY,
+  },
 });

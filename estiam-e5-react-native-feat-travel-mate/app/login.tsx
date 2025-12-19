@@ -119,30 +119,35 @@ export default function LoginScreen() {
 
                         </View>
 
-                        <View>
-                            <Ionicons name="lock-closed-outline" size={24} color="#6b7280" style={styles.inputIcon} />
-                            <TextInput
-                                style={styles.input}
-                                placeholder="Mot de passe"
-                                placeholderTextColor="#9ca3af"
-                                value={password}
-                                onChangeText={setPassword}
-                                secureTextEntry={!showPassword}
-                                autoComplete="password"
-                                autoCapitalize="none"
-                                editable={!isLoading}
-                            />
-
-                            <TouchableOpacity
-                                onPress={() => setshowPassword(!showPassword)}
-                                style={styles.eyeButton}
-                            >
-                                <Ionicons
-                                    name={showPassword ? 'eye-off-outline' : 'eye-outline'}
-                                    size={24}
-                                    color="#fff" />
-                            </TouchableOpacity>
-                        </View>
+<View style={styles.inputContainer}>
+  <Ionicons
+    name="lock-closed-outline"
+    size={24}
+    color="#6b7280"
+    style={styles.inputIcon}
+  />
+  <TextInput
+    style={styles.input}
+    placeholder="Mot de passe"
+    placeholderTextColor="#9ca3af"
+    value={password}
+    onChangeText={setPassword}
+    secureTextEntry={!showPassword}
+    autoComplete="password"
+    autoCapitalize="none"
+    editable={!isLoading}
+  />
+  <TouchableOpacity
+    onPress={() => setshowPassword(!showPassword)}
+    style={styles.eyeButton}
+  >
+    <Ionicons
+      name={showPassword ? "eye-off-outline" : "eye-outline"}
+      size={24}
+      color="#6b7280" // Changed from #fff to gray to be visible
+    />
+  </TouchableOpacity>
+</View>
                         <TouchableOpacity
                             onPress={handleSubmit}
                             style={[styles.submitButton, isLoading && styles.submitButtonDisabled]}

@@ -146,5 +146,51 @@
       "lat": 0,
       "lng": 0
     }
+  },
+  {
+    "id": "5dea4936-8265-4858-bbe7-b6c03f725577",
+    "title": "Trip to Tokyo in Mars",
+    "destination": "Tokyo, Japan",
+    "startDate": "01/01/2026",
+    "endDate": "07/01/2027",
+    "image": "http://10.0.2.2:4000/uploads/1766103470114-a5494e1f-103c-406c-97d1-22d614d30267.jpeg",
+    "description": "woooooo",
+    "photos": [
+      "http://10.0.2.2:4000/uploads/1766103470114-a5494e1f-103c-406c-97d1-22d614d30267.jpeg"
+    ],
+    "location": {
+      "lat": 0,
+      "lng": 0
+    }
+  },
+  {
+    "id": "c145a4eb-5f03-4818-8c26-8a6c14b93499",
+    "title": "USA Mars",
+    "destination": "Mountain View, United States",
+    "startDate": "1/01/2026",
+    "endDate": "10/01/02026",
+    "image": "http://10.0.2.2:4000/uploads/1766103650389-0f8ca5f0-a616-483d-9dea-0734cecf16b6.jpeg",
+    "description": "woooooooooo",
+    "photos": [
+      "http://10.0.2.2:4000/uploads/1766103650389-0f8ca5f0-a616-483d-9dea-0734cecf16b6.jpeg"
+    ],
+    "location": {
+      "lat": 0,
+      "lng": 0
+    }
+  },
+  {
+    "id": "ab6aea30-a90b-4c9e-9178-80238c82119f",
+    "title": "Tokyo",
+    "destination": "Tokyo, Japan",
+    "startDate": "01/02/2026",
+    "endDate": "09/02/2026",
+    "image": "",
+    "description": "fdgdfgg",
+    "photos": [],
+    "location": {
+      "lat": 0,
+      "lng": 0
+    }
   }
 ]

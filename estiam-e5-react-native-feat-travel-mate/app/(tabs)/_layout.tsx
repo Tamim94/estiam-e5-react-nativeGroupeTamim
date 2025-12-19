@@ -1,10 +1,13 @@
 import { Tabs } from 'expo-router';
 import React from 'react';
-
+import { Platform } from 'react-native';
+import Ionicons from '@expo/vector-icons/Ionicons';
 import { HapticTab } from '@/components/haptic-tab';
-import { IconSymbol } from '@/components/ui/icon-symbol';
-import { Colors } from '@/constants/theme';
 import { useColorScheme } from '@/hooks/use-color-scheme';
+
+// Using the same Purple from your Home/Profile screens
+const PRIMARY_COLOR = '#a855f7';
+const INACTIVE_COLOR = '#9ca3af'; // Gray
 
 export default function TabLayout() {
   const colorScheme = useColorScheme();
@@ -12,22 +15,67 @@ export default function TabLayout() {
   return (
     <Tabs
       screenOptions={{
-        tabBarActiveTintColor: Colors[colorScheme ?? 'light'].tint,
+        // Set the active color to your theme purple
+        tabBarActiveTintColor: PRIMARY_COLOR,
+        tabBarInactiveTintColor: INACTIVE_COLOR,
         headerShown: false,
         tabBarButton: HapticTab,
+        // Styling the Tab Bar to look cleaner
+        tabBarStyle: {
+            backgroundColor: 'white',
+            borderTopWidth: 0,
+            elevation: 0, // Remove shadow on Android
+            shadowColor: '#000', // Subtle shadow on iOS
+            shadowOffset: { width: 0, height: -2 },
+            shadowOpacity: 0.05,
+            shadowRadius: 10,
+            height: Platform.OS === 'ios' ? 85 : 65,
+            paddingBottom: Platform.OS === 'ios' ? 30 : 10,
+            paddingTop: 10,
+        },
+        tabBarLabelStyle: {
+            fontSize: 12,
+            fontWeight: '500',
+        }
       }}>
       <Tabs.Screen
         name="index"
         options={{
           title: 'Home',
-          tabBarIcon: ({ color }) => <IconSymbol size={28} name="house.fill" color={color} />,
+          tabBarIcon: ({ color, focused }) => (
+            <Ionicons
+                name={focused ? "home" : "home-outline"}
+                size={24}
+                color={color}
+            />
+          ),
         }}
       />
       <Tabs.Screen
         name="trips"
         options={{
           title: 'Trips',
-          tabBarIcon: ({ color }) => <IconSymbol size={28} name="map.fill" color={color} />,
+          tabBarIcon: ({ color, focused }) => (
+            <Ionicons
+                name={focused ? "map" : "map-outline"}
+                size={24}
+                color={color}
+            />
+          ),
+        }}
+      />
+
+      <Tabs.Screen
+        name="notification"
+        options={{
+            title: 'Alerts',
+            tabBarIcon: ({ color, focused }) => (
+                <Ionicons
+                    name={focused ? "notifications" : "notifications-outline"}
+                    size={24}
+                    color={color}
+                />
+            ),
         }}
       />
 
@@ -35,14 +83,13 @@ export default function TabLayout() {
         name="profile"
         options={{
           title: 'Profile',
-          tabBarIcon: ({ color }) => <IconSymbol size={28} name="person.fill" color={color} />,
-        }}
-      />
-      <Tabs.Screen
-        name="notification"
-        options={{
-          title: 'Notification',
-          tabBarIcon: ({ color }) => <IconSymbol size={28} name="alarm.fill" color={color} />,
+          tabBarIcon: ({ color, focused }) => (
+            <Ionicons
+                name={focused ? "person" : "person-outline"}
+                size={24}
+                color={color}
+            />
+          ),
         }}
       />
     </Tabs>
