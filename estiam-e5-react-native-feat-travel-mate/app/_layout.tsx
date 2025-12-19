@@ -9,85 +9,83 @@ import { useEffect } from 'react';
 import Ionicons from '@expo/vector-icons/Ionicons';
 import { StyleSheet, TouchableOpacity, Text, View } from 'react-native';
 import { useAuth, AuthProvider } from '@/contexts/auth-context';
+import { ThemeProviderCustom, useTheme } from '@/contexts/theme-context';
 
 export const unstable_settings = {
   anchor: '(tabs)',
 };
 
 function RootLayoutContent() {
-  const colorScheme = useColorScheme();
-  const { isOnline, pendingCount, isSyncing, syncNow } = useOffline();
+  const systemScheme = useColorScheme();
+  const { isDarkMode } = useTheme();
+
+  const { isOnline, pendingCount, isSyncing } = useOffline();
   const { isAuthenticated, isLoading, refreshAuth } = useAuth();
   const segments = useSegments();
   const router = useRouter();
 
-
-  // check auth
   useEffect(() => {
-    if (isLoading) {
-      return;
-    }
+    if (isLoading) return;
+
     const inAuthGroup = segments[0] === '(tabs)' || segments[0] === 'modal';
     const isLoginpage = segments[0] === 'login';
+
     if (!isAuthenticated && inAuthGroup) {
-      return router.replace('/login');
+      router.replace('/login');
     } else if (isAuthenticated && isLoginpage) {
-      return router.replace('/(tabs)');
-
-    } else {
-      console.log('✅ [ROUTER] Route access granted');
-
+      router.replace('/(tabs)');
     }
+  }, [segments, isLoading, isAuthenticated, router]);
 
-  }, [segments, isLoading, isAuthenticated, router])
+  useEffect(() => {
+    if (segments[0] === '(tabs)' && !isLoading && !isAuthenticated) {
+      refreshAuth();
+    }
+  }, [segments, isLoading, isAuthenticated]);
 
-
-    useEffect(() => {
-      if (segments[0] === '(tabs)' && ! isLoading && !isAuthenticated) {
-        refreshAuth();
-      }
-  }, [segments, isLoading, isAuthenticated, router])
+  const theme =
+      isDarkMode
+          ? DarkTheme
+          : systemScheme === 'dark'
+              ? DarkTheme
+              : DefaultTheme;
 
   return (
-    <ThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
-      {/*Banner Offline*/}
-      {!isOnline && (
-        <View style={styles.offlineBanner}>
-          <Ionicons name='cloud-offline-outline' size={16} color='#fff' />
-          <Text style={styles.bannerText}>
-            Hors ligne {pendingCount > 0 && `• ${pendingCount} en attente`}
-          </Text>
-        </View>
-      )}
+      <ThemeProvider value={theme}>
+        {!isOnline && (
+            <View style={styles.offlineBanner}>
+              <Ionicons name='cloud-offline-outline' size={16} color='#fff' />
+              <Text style={styles.bannerText}>
+                Hors ligne {pendingCount > 0 && `• ${pendingCount} en attente`}
+              </Text>
+            </View>
+        )}
 
-      {/*Banner Sync */}
+        {isOnline && pendingCount > 0 && (
+            <TouchableOpacity style={styles.syncBanner}>
+              <Ionicons
+                  name={isSyncing ? "sync" : "sync-outline"}
+                  size={16}
+                  color="#fff"
+              />
+              <Text style={styles.bannerText}>
+                {isSyncing
+                    ? 'Synchronisation...'
+                    : `Synchroniser ${pendingCount} action(s)`}
+              </Text>
+            </TouchableOpacity>
+        )}
 
-      {isOnline && pendingCount > 0 && (
-        <TouchableOpacity>
-          <Ionicons
-            name={isSyncing ? "sync" : "sync-outline"}
-            size={16}
-            color="#fff"
-          />E
-          <Text style={styles.bannerText}>
-            {isSyncing
-              ? 'Synchronisation...'
-              : `Synchroniser ${pendingCount} action(s)`}
-          </Text>
-        </TouchableOpacity>
-      )}
+        <Stack>
+          <Stack.Screen name="login" options={{ headerShown: false }} />
+          <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
+          <Stack.Screen name="modal" options={{ presentation: 'modal', title: 'Modal' }} />
+        </Stack>
 
-      <Stack>
-        <Stack.Screen name="login" options={{ headerShown: false }} />
-        <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
-        <Stack.Screen name="modal" options={{ presentation: 'modal', title: 'Modal' }} />
-      </Stack>
-      <StatusBar style="auto" />
-    </ThemeProvider>
+        <StatusBar style={isDarkMode ? "light" : "auto"} />
+      </ThemeProvider>
   );
 }
-
-
 
 const styles = StyleSheet.create({
   offlineBanner: {
@@ -115,12 +113,12 @@ const styles = StyleSheet.create({
   }
 });
 
-
 export default function RootLayout() {
   return (
-    <AuthProvider>
-        <RootLayoutContent />
-    </AuthProvider>
+      <AuthProvider>
+        <ThemeProviderCustom>
+          <RootLayoutContent />
+        </ThemeProviderCustom>
+      </AuthProvider>
   );
-  
 }
