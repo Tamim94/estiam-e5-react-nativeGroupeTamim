@@ -55,7 +55,7 @@ Elle permet aux utilisateurs de créer, supprimer , update et  consulter et orga
    ```
 
 ### ⚠️ Notes importantes
-- Sur émulateur Android, l'URL `10.0.2.2` est utilisée au lieu de `localhost`
+- Sur émulateur Android, l'URL `10.0.2.2` est utilisée au lieu de `localhost` donc changez le en fonction de votre environnement!!!!!!!!!!!!!!!!!!!!!!!!!! (fichier env.ts et .env)
 - Le backend mock a été adapté pour gérer correctement Android et iOS (uploads, URLs publiques)
 - Modifications apportées pour améliorer la compatibilité du debugging web et mobile (importation de la librairie Platform dans `env.ts`)
 
